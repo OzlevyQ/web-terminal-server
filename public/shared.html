@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="he" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared Terminal Session</title>
+    <script>
+        // Redirect to terminal-grid.html with the shareId
+        window.addEventListener('DOMContentLoaded', () => {
+            const pathParts = window.location.pathname.split('/');
+            const shareId = pathParts[pathParts.length - 1];
+            
+            if (shareId) {
+                // Redirect to index.html with the shareId
+                window.location.href = `/index.html?share=${shareId}`;
+            } else {
+                document.body.innerHTML = '<div style="padding: 20px; color: red;">Error: No share ID provided</div>';
+            }
+        });
+    </script>
+</head>
+<body>
+    <div style="padding: 20px; text-align: center;">
+        <h2>Loading shared terminal...</h2>
+    </div>
+</body>
+</html>

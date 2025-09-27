@@ -1,0 +1,63 @@
+{
+  "name": "web-terminal-server",
+  "version": "1.0.0",
+  "description": "Professional web-based terminal server with persistent sessions, live sharing, and full CLI support",
+  "main": "src/server.js",
+  "bin": {
+    "web-terminal-server": "./bin/cli.js",
+    "wts": "./bin/cli.js"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "echo \"Tests coming soon\" && exit 0"
+  },
+  "keywords": [
+    "terminal",
+    "web-terminal",
+    "pty",
+    "xterm",
+    "ssh",
+    "remote-terminal",
+    "persistent-sessions",
+    "terminal-sharing",
+    "cli-tools",
+    "codex",
+    "claude-code",
+    "ai-cli"
+  ],
+  "author": "Web Terminal Server Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/web-terminal-server/web-terminal-server.git"
+  },
+  "homepage": "https://github.com/web-terminal-server/web-terminal-server#readme",
+  "bugs": {
+    "url": "https://github.com/web-terminal-server/web-terminal-server/issues"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "node-pty": "^1.0.0",
+    "cors": "^2.8.5",
+    "compression": "^1.7.4",
+    "uuid": "^9.0.1",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "preferGlobal": true,
+  "files": [
+    "bin/",
+    "src/",
+    "public/",
+    "README.md",
+    "LICENSE",
+    ".env.example"
+  ]
+}

@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="he" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Terminal Grid - Professional Terminal Interface</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2358A6FF'/><text x='50' y='65' text-anchor='middle' font-size='50' fill='%23ffffff'>⚡</text></svg>" />
+    
+    <style>
+        :root {
+            --primary-bg: #0D1117;
+            --secondary-bg: #161B22;
+            --tertiary-bg: #21262D;
+            --accent-color: #58A6FF;
+            --accent-hover: #79C0FF;
+            --text-primary: #F0F6FC;
+            --text-secondary: #8B949E;
+            --text-muted: #6E7681;
+            --border-color: #30363D;
+            --success-color: #238636;
+            --warning-color: #F85149;
+            --surface-color: #0D1117;
+            --shadow-color: rgba(0, 0, 0, 0.6);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+        }
+
+        /* CSS Grid Layout */
+        .app-grid {
+            height: 100vh;
+            width: 100vw;
+            display: grid;
+            grid-template-areas: 
+                "header"
+                "terminal"
+                "actions";
+            grid-template-rows: 56px 1fr 64px;
+            transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .app-grid.controls-active {
+            grid-template-areas: 
+                "header"
+                "terminal"
+                "controls"
+                "actions";
+            grid-template-rows: 56px 1fr auto 64px;
+        }
+
+        /* Header Area */
+        .header-area {
+            grid-area: header;
+            background: var(--secondary-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px;
+            box-shadow: 0 1px 3px var(--shadow-color);
+        }
+
+        .logo {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-icon {
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: var(--primary-bg);
+            box-shadow: 0 2px 4px rgba(88, 166, 255, 0.3);
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .header-btn {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header-btn:hover {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: var(--primary-bg);
+            box-shadow: 0 2px 8px rgba(88, 166, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .header-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Terminal Area */
+        .terminal-area {
+            grid-area: terminal;
+            background: var(--surface-color);
+            position: relative;
+            overflow: hidden;
+            margin: 8px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .terminal-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 12px;
+        }
+
+        .terminal-screen {
+            width: 100%;
+            height: 100%;
+            background: var(--primary-bg);
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Controls Area */
+        .controls-area {
+            grid-area: controls;
+            background: var(--secondary-bg);
+            border-top: 1px solid var(--border-color);
+            display: none;
+            flex-direction: column;
+            box-shadow: 0 -2px 8px var(--shadow-color);
+        }
+
+        .controls-active .controls-area {
+            display: flex;
+        }
+
+        /* Controls Header */
+        .controls-header {
+            background: var(--tertiary-bg);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .controls-title {
+            font-size: 14px;
+            color: var(--text-primary);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .controls-icon {
+            width: 16px;
+            height: 16px;
+            background: var(--accent-color);
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: var(--primary-bg);
+        }
+
+        .minimize-btn {
+            background: var(--warning-color);
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .minimize-btn:hover {
+            background: #F85149;
+            transform: scale(1.1);
+        }
+
+        .minimize-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Controls Content */
+        .controls-content {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        /* Arrow Keys Section */
+        .arrows-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .arrows-grid {
+            display: grid;
+            grid-template-areas:
+                ". up ."
+                "left down right";
+            grid-template-columns: 40px 40px 40px;
+            grid-template-rows: 40px 40px;
+            gap: 6px;
+        }
+
+        .arrow-up { grid-area: up; }
+        .arrow-down { grid-area: down; }
+        .arrow-left { grid-area: left; }
+        .arrow-right { grid-area: right; }
+
+        /* Keys Section */
+        .keys-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .keys-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        /* Control Key Styles */
+        .ctrl-key {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            padding: 8px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 36px;
+            user-select: none;
+        }
+
+        .ctrl-key:hover {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: var(--primary-bg);
+            transform: translateY(-1px);
+        }
+
+        .ctrl-key:active {
+            transform: scale(0.95);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .ctrl-key.arrow {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .ctrl-key.special {
+            background: var(--warning-color);
+            border-color: var(--warning-color);
+            color: white;
+        }
+
+        .ctrl-key.special:hover {
+            background: #F85149;
+            border-color: #F85149;
+        }
+
+        /* Actions Area */
+        .actions-area {
+            grid-area: actions;
+            background: var(--secondary-bg);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .action-btn:hover,
+        .action-btn.active {
+            background: var(--tertiary-bg);
+            color: var(--accent-color);
+            transform: translateY(-1px);
+        }
+
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+
+        .action-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        /* Icons */
+        .icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Welcome Screen */
+        .welcome {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            opacity: 0.8;
+        }
+
+        .welcome-icon {
+            width: 64px;
+            height: 64px;
+            background: var(--accent-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: var(--primary-bg);
+            margin: 0 auto 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        .welcome-text {
+            font-size: 20px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .welcome-sub {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: var(--accent-color);
+            color: var(--primary-bg);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
+            animation: slideIn 0.3s ease-out;
+            z-index: 1000;
+            border: 1px solid var(--accent-hover);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Loading */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--primary-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .header-area {
+                padding: 0 16px;
+            }
+
+            .controls-content {
+                grid-template-columns: 1fr;
+                gap: 16px;
+                padding: 16px;
+            }
+            
+            .keys-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .header-btn {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+
+            .arrows-grid {
+                grid-template-columns: 36px 36px 36px;
+                grid-template-rows: 36px 36px;
+            }
+
+            .ctrl-key {
+                min-height: 32px;
+                font-size: 10px;
+            }
+        }
+
+        /* Scrollbar Styling */
+        .controls-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .controls-content::-webkit-scrollbar-track {
+            background: var(--secondary-bg);
+        }
+
+        .controls-content::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .controls-content::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading -->
+    <div class="loading" id="loading">
+        <div style="text-align: center;">
+            <div class="spinner"></div>
+            <div style="color: var(--accent-color); margin-top: 16px; font-size: 14px; font-weight: 500;">
+                Initializing Terminal Grid...
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Grid Layout -->
+    <div class="app-grid" id="appGrid">
+        <!-- Header Area -->
+        <div class="header-area">
+            <div class="logo">
+                <div class="logo-icon">⚡</div>
+                Terminal Grid
+            </div>
+            <div class="header-controls">
+                <button class="header-btn" onclick="createTerminal()">
+                    <span class="icon">+</span>
+                    New Terminal
+                </button>
+                <button class="header-btn" onclick="showStats()">
+                    <span class="icon">ⓘ</span>
+                    Stats
+                </button>
+            </div>
+        </div>
+
+        <!-- Terminal Area - האזור שמתכווץ אוטומטית -->
+        <div class="terminal-area" id="terminalArea">
+            <div class="terminal-container">
+                <div class="terminal-screen" id="terminalScreen">
+                    <!-- Welcome Screen -->
+                    <div class="welcome" id="welcome">
+                        <div class="welcome-icon">▶</div>
+                        <div class="welcome-text">Terminal Grid</div>
+                        <div class="welcome-sub">Click "New Terminal" to start</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Area - מופיע רק כאשר נדרש -->
+        <div class="controls-area" id="controlsArea">
+            <!-- Controls Header -->
+            <div class="controls-header">
+                <div class="controls-title">
+                    <div class="controls-icon">⌨</div>
+                    Terminal Controls
+                </div>
+                <button class="minimize-btn" onclick="hideControls()" title="Close Controls">
+                    ×
+                </button>
+            </div>
+
+            <!-- Controls Content -->
+            <div class="controls-content">
+                <!-- Arrow Keys Section -->
+                <div class="arrows-section">
+                    <div class="section-title">Navigation</div>
+                    <div class="arrows-grid">
+                        <button class="ctrl-key arrow arrow-up" onclick="sendKey('ArrowUp')">↑</button>
+                        <button class="ctrl-key arrow arrow-left" onclick="sendKey('ArrowLeft')">←</button>
+                        <button class="ctrl-key arrow arrow-down" onclick="sendKey('ArrowDown')">↓</button>
+                        <button class="ctrl-key arrow arrow-right" onclick="sendKey('ArrowRight')">→</button>
+                    </div>
+                </div>
+
+                <!-- Keys Section -->
+                <div class="keys-section">
+                    <div class="section-title">Control Keys</div>
+                    <div class="keys-grid">
+                        <button class="ctrl-key" onclick="sendKey('Tab')">Tab</button>
+                        <button class="ctrl-key" onclick="sendKey('Escape')">Esc</button>
+                        <button class="ctrl-key" onclick="sendKey('Enter')">Enter</button>
+                        <button class="ctrl-key" onclick="sendKey('Backspace')">⌫</button>
+                        <button class="ctrl-key special" onclick="sendCtrlKey('c')">Ctrl+C</button>
+                        <button class="ctrl-key special" onclick="sendCtrlKey('d')">Ctrl+D</button>
+                    </div>
+                    
+                    <div style="margin-top: 12px;">
+                        <div class="section-title">Text Actions</div>
+                        <div class="keys-grid">
+                            <button class="ctrl-key" onclick="copySelection()">Copy</button>
+                            <button class="ctrl-key" onclick="pasteText()">Paste</button>
+                            <button class="ctrl-key" onclick="sendKey(' ')" style="grid-column: span 2;">Space</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions Area -->
+        <div class="actions-area">
+            <button class="action-btn" onclick="focusTerminal()">
+                <span class="action-icon">⌨</span>
+                <span>Keyboard</span>
+            </button>
+            <button class="action-btn" onclick="toggleControls()" id="controlsBtn">
+                <span class="action-icon">⚙</span>
+                <span>Controls</span>
+            </button>
+            <button class="action-btn" onclick="clearTerminal()">
+                <span class="action-icon">⌫</span>
+                <span>Clear</span>
+            </button>
+            <button class="action-btn" onclick="shareTerminal()">
+                <span class="action-icon">↗</span>
+                <span>Share</span>
+            </button>
+            <button class="action-btn" onclick="openMonitor()" style="background: var(--accent-color); color: var(--primary-bg);">
+                <span class="action-icon">▦</span>
+                <span>Monitor</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    
+    <script>
+        // Global state
+        let terminal = null;
+        let socket = null;
+        let sessionId = null;
+        let shareId = null;
+        let controlsVisible = false;
+        let config = {};
+
+        // Mobile detection
+        const isMobile = window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+        // Check URL for existing session
+        function checkUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pathParts = window.location.pathname.split('/');
+            
+            // Check for /terminal/{shareId} format
+            if (pathParts[1] === 'terminal' && pathParts[2]) {
+                return { shareId: pathParts[2] };
+            }
+            
+            // Check for ?connect={sessionId} format
+            if (urlParams.get('connect')) {
+                return { sessionId: urlParams.get('connect') };
+            }
+            
+            // Check for ?share={shareId} format
+            if (urlParams.get('share')) {
+                return { shareId: urlParams.get('share') };
+            }
+            
+            return null;
+        }
+
+        // Load configuration
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                config = await response.json();
+                console.log('Config loaded:', config);
+                
+                document.getElementById('loading').style.display = 'none';
+                setupApp();
+            } catch (error) {
+                console.error('Config error:', error);
+                showToast('Configuration Error');
+            }
+        }
+
+        // Setup application
+        function setupApp() {
+            setupEventListeners();
+            console.log('Terminal Grid ready');
+            
+            // Check if we should connect to an existing session
+            const existingSession = checkUrlParams();
+            if (existingSession) {
+                console.log('Connecting to existing session:', existingSession);
+                connectToExistingSession(existingSession);
+            }
+        }
+
+        // Create terminal
+        function createTerminal() {
+            if (terminal) {
+                showToast('Terminal already active');
+                return;
+            }
+
+            // Hide welcome
+            document.getElementById('welcome').style.display = 'none';
+
+            // Create xterm
+            terminal = new Terminal({
+                cursorBlink: true,
+                fontSize: isMobile ? 12 : 14,
+                fontFamily: '"Cascadia Code", "Courier New", monospace',
+                theme: {
+                    background: '#000814',
+                    foreground: '#e0e0e0',
+                    cursor: '#00ff88'
+                },
+                scrollback: 5000,
+                convertEol: true
+            });
+
+            // Add fit addon
+            const fitAddon = new FitAddon.FitAddon();
+            terminal.loadAddon(fitAddon);
+            terminal.fitAddon = fitAddon;
+
+            // Open terminal
+            const screen = document.getElementById('terminalScreen');
+            terminal.open(screen);
+            fitAddon.fit();
+
+            // Create socket
+            socket = io(config.socketUrl || window.location.origin, {
+                transports: ['websocket'],
+                reconnection: true
+            });
+
+            // Socket events
+            socket.on('connect', () => {
+                // Don't create a new session if we're connecting to an existing one
+                if (!shareId) {
+                    socket.emit('terminal:create', {
+                        cols: terminal.cols,
+                        rows: terminal.rows,
+                        shareable: true,
+                        name: 'GridTerminal'
+                    });
+                }
+            });
+
+            socket.on('terminal:created', (data) => {
+                sessionId = data.sessionId;
+                shareId = data.shareId;
+                terminal.writeln(`\x1b[32m✓ Grid Terminal Connected\x1b[0m`);
+                if (data.shareId) {
+                    terminal.writeln(`\x1b[36m🔗 Share: ${data.shareId}\x1b[0m\n`);
+                }
+            });
+
+            socket.on('terminal:connected', (data) => {
+                sessionId = data.sessionId;
+                shareId = data.shareId;
+                terminal.writeln(`\x1b[32m✓ Connected to existing session\x1b[0m`);
+                if (data.name) {
+                    terminal.writeln(`\x1b[36m📝 Session: ${data.name}\x1b[0m`);
+                }
+                if (data.recreated) {
+                    terminal.writeln(`\x1b[33m⚠ Session was inactive, recreated\x1b[0m`);
+                }
+                terminal.writeln('');
+            });
+            
+            socket.on('terminal:history', (data) => {
+                // Restore terminal history
+                if (data.data) {
+                    terminal.write(data.data);
+                    terminal.scrollToBottom();
+                }
+            });
+
+            socket.on('terminal:data', (data) => {
+                terminal.write(data.data, () => {
+                    if (data.token) {
+                        socket.emit('terminal:ack', {
+                            sessionId: sessionId,
+                            tokens: [data.token]
+                        });
+                    }
+                    terminal.scrollToBottom();
+                });
+            });
+
+            socket.on('disconnect', () => {
+                terminal.writeln(`\n\x1b[31m✗ Connection lost\x1b[0m`);
+            });
+
+            // Terminal input
+            terminal.onData((data) => {
+                if (socket && sessionId) {
+                    socket.emit('terminal:input', {
+                        sessionId: sessionId,
+                        data: data
+                    });
+                    setTimeout(() => terminal.scrollToBottom(), 50);
+                }
+            });
+
+            // Terminal resize
+            terminal.onResize(({ cols, rows }) => {
+                if (socket && sessionId) {
+                    socket.emit('terminal:resize', {
+                        sessionId: sessionId,
+                        cols: cols,
+                        rows: rows
+                    });
+                }
+            });
+
+            showToast('Terminal Ready');
+        }
+
+        // Focus terminal
+        function focusTerminal() {
+            if (terminal) {
+                terminal.focus();
+                terminal.scrollToBottom();
+            } else {
+                createTerminal();
+            }
+        }
+
+        // Toggle controls - השינוי הקריטי כאן!
+        function toggleControls() {
+            const appGrid = document.getElementById('appGrid');
+            const controlsBtn = document.getElementById('controlsBtn');
+            
+            if (controlsVisible) {
+                hideControls();
+            } else {
+                showControls();
+            }
+        }
+
+        function showControls() {
+            const appGrid = document.getElementById('appGrid');
+            const controlsBtn = document.getElementById('controlsBtn');
+            
+            // הקסם! רק משנים CSS class
+            appGrid.classList.add('controls-active');
+            controlsBtn.classList.add('active');
+            controlsVisible = true;
+            
+            // CSS Grid אוטומטית מתכווץ את הטרמינל!
+            setTimeout(() => {
+                if (terminal && terminal.fitAddon) {
+                    terminal.fitAddon.fit();
+                }
+            }, 300);
+            
+            showToast('Controls Activated');
+        }
+
+        function hideControls() {
+            const appGrid = document.getElementById('appGrid');
+            const controlsBtn = document.getElementById('controlsBtn');
+            
+            // הסרת הclass מחזירה את הגריד למצב המקורי
+            appGrid.classList.remove('controls-active');
+            controlsBtn.classList.remove('active');
+            controlsVisible = false;
+            
+            // הטרמינל מתרחב חזרה אוטומטית!
+            setTimeout(() => {
+                if (terminal && terminal.fitAddon) {
+                    terminal.fitAddon.fit();
+                }
+            }, 300);
+            
+            showToast('Controls Hidden');
+        }
+
+        // Send key to terminal
+        function sendKey(key) {
+            if (!terminal || !socket || !sessionId) return;
+            
+            let data = '';
+            switch(key) {
+                case 'ArrowUp': data = '\x1b[A'; break;
+                case 'ArrowDown': data = '\x1b[B'; break;
+                case 'ArrowRight': data = '\x1b[C'; break;
+                case 'ArrowLeft': data = '\x1b[D'; break;
+                case 'Tab': data = '\t'; break;
+                case 'Escape': data = '\x1b'; break;
+                case 'Enter': data = '\r'; break;
+                case 'Backspace': data = '\x7f'; break;
+                case ' ': data = ' '; break;
+                default: data = key;
+            }
+            
+            socket.emit('terminal:input', {
+                sessionId: sessionId,
+                data: data
+            });
+        }
+
+        // Send Ctrl+key
+        function sendCtrlKey(key) {
+            if (!terminal || !socket || !sessionId) return;
+            
+            let data = '';
+            switch(key) {
+                case 'c': data = '\x03'; break;
+                case 'd': data = '\x04'; break;
+                default:
+                    const code = key.charCodeAt(0) - 96;
+                    if (code >= 1 && code <= 26) {
+                        data = String.fromCharCode(code);
+                    }
+            }
+            
+            if (data) {
+                socket.emit('terminal:input', {
+                    sessionId: sessionId,
+                    data: data
+                });
+            }
+        }
+
+        // Copy selection
+        function copySelection() {
+            if (!terminal) return;
+            const selection = terminal.getSelection();
+            if (selection) {
+                navigator.clipboard.writeText(selection).then(() => {
+                    showToast('Text Copied');
+                }).catch(() => {
+                    showToast('Copy Failed');
+                });
+            } else {
+                showToast('Nothing Selected');
+            }
+        }
+
+        // Paste text
+        async function pasteText() {
+            if (!terminal || !socket || !sessionId) return;
+            
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    socket.emit('terminal:input', {
+                        sessionId: sessionId,
+                        data: text
+                    });
+                    showToast('Text Pasted');
+                }
+            } catch (err) {
+                const text = prompt('Enter text to paste:');
+                if (text) {
+                    socket.emit('terminal:input', {
+                        sessionId: sessionId,
+                        data: text
+                    });
+                }
+            }
+        }
+
+        // Clear terminal
+        function clearTerminal() {
+            if (terminal) {
+                terminal.clear();
+                showToast('Terminal Cleared');
+            }
+        }
+
+        // Share terminal
+        function shareTerminal() {
+            if (!shareId) {
+                showToast('No shareable session');
+                return;
+            }
+            
+            const shareUrl = `${window.location.origin}/terminal/${shareId}`;
+            
+            // Try to copy to clipboard
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                showToast('Share URL copied to clipboard!');
+                
+                // Also show in a dialog for manual copying
+                const dialog = confirm(`Terminal share URL:\n\n${shareUrl}\n\nURL has been copied to clipboard. Click OK to open in new tab.`);
+                if (dialog) {
+                    window.open(shareUrl, '_blank');
+                }
+            }).catch(() => {
+                // Fallback to prompt
+                prompt('Copy this share URL:', shareUrl);
+            });
+        }
+
+        // Show stats
+        function showStats() {
+            if (terminal) {
+                showToast(`Rows: ${terminal.rows}, Cols: ${terminal.cols}`);
+            } else {
+                showToast('No active terminal');
+            }
+        }
+
+        // Open monitor dashboard
+        function openMonitor() {
+            window.open('/monitor', '_blank');
+        }
+
+        // Connect to existing session
+        function connectToExistingSession(session) {
+            // Hide welcome
+            document.getElementById('welcome').style.display = 'none';
+            
+            // Create xterm
+            terminal = new Terminal({
+                cursorBlink: true,
+                fontSize: isMobile ? 12 : 14,
+                fontFamily: '"Cascadia Code", "Courier New", monospace',
+                theme: {
+                    background: '#000814',
+                    foreground: '#e0e0e0',
+                    cursor: '#00ff88'
+                },
+                scrollback: 5000,
+                convertEol: true
+            });
+
+            // Add fit addon
+            const fitAddon = new FitAddon.FitAddon();
+            terminal.loadAddon(fitAddon);
+            terminal.fitAddon = fitAddon;
+
+            // Open terminal
+            const screen = document.getElementById('terminalScreen');
+            terminal.open(screen);
+            fitAddon.fit();
+
+            // Store the shareId if we have it
+            if (session.shareId) {
+                shareId = session.shareId;
+            }
+
+            // Create socket
+            socket = io(config.socketUrl || window.location.origin, {
+                transports: ['websocket'],
+                reconnection: true
+            });
+
+            // Socket events for existing session
+            socket.on('connect', () => {
+                if (session.shareId) {
+                    // Connect to existing session by shareId
+                    socket.emit('terminal:connect', {
+                        shareId: session.shareId
+                    });
+                } else if (session.sessionId) {
+                    // Try to find shareId from sessionId
+                    fetch('/api/sessions')
+                        .then(res => res.json())
+                        .then(sessions => {
+                            const found = sessions.find(s => s.sessionId === session.sessionId);
+                            if (found && found.shareId) {
+                                shareId = found.shareId;
+                                socket.emit('terminal:connect', {
+                                    shareId: found.shareId
+                                });
+                            } else {
+                                // Create new session if not found
+                                socket.emit('terminal:create', {
+                                    cols: terminal.cols,
+                                    rows: terminal.rows,
+                                    shareable: true,
+                                    name: 'GridTerminal'
+                                });
+                            }
+                        })
+                        .catch(() => {
+                            // Create new session on error
+                            socket.emit('terminal:create', {
+                                cols: terminal.cols,
+                                rows: terminal.rows,
+                                shareable: true,
+                                name: 'GridTerminal'
+                            });
+                        });
+                }
+            });
+
+            // Handle terminal:connected event
+            socket.on('terminal:connected', (data) => {
+                sessionId = data.sessionId;
+                shareId = data.shareId;
+                terminal.writeln(`\x1b[32m✓ Connected to existing session\x1b[0m`);
+                if (data.name) {
+                    terminal.writeln(`\x1b[36m📝 Session: ${data.name}\x1b[0m`);
+                }
+                if (data.recreated) {
+                    terminal.writeln(`\x1b[33m⚠ Session was inactive, recreated\x1b[0m`);
+                }
+                terminal.writeln('');
+            });
+            
+            socket.on('terminal:history', (data) => {
+                // Restore terminal history
+                if (data.data) {
+                    terminal.write(data.data);
+                    terminal.scrollToBottom();
+                }
+            });
+
+            // Handle terminal:created event (fallback)
+            socket.on('terminal:created', (data) => {
+                sessionId = data.sessionId;
+                shareId = data.shareId;
+                terminal.writeln(`\x1b[32m✓ New Terminal Created\x1b[0m`);
+                if (data.shareId) {
+                    terminal.writeln(`\x1b[36m🔗 Share: ${data.shareId}\x1b[0m\n`);
+                }
+            });
+
+            socket.on('terminal:data', (data) => {
+                terminal.write(data.data, () => {
+                    if (data.token) {
+                        socket.emit('terminal:ack', {
+                            sessionId: sessionId,
+                            tokens: [data.token]
+                        });
+                    }
+                    terminal.scrollToBottom();
+                });
+            });
+
+            socket.on('terminal:error', (error) => {
+                terminal.writeln(`\n\x1b[31m✗ Error: ${error.message}\x1b[0m`);
+                showToast(error.message);
+            });
+
+            socket.on('disconnect', () => {
+                terminal.writeln(`\n\x1b[31m✗ Connection lost\x1b[0m`);
+            });
+
+            socket.on('reconnect', () => {
+                terminal.writeln(`\n\x1b[32m✓ Reconnected\x1b[0m`);
+                if (shareId) {
+                    socket.emit('terminal:connect', { shareId });
+                }
+            });
+
+            // Terminal input
+            terminal.onData((data) => {
+                if (socket && sessionId) {
+                    socket.emit('terminal:input', {
+                        sessionId: sessionId,
+                        data: data
+                    });
+                    setTimeout(() => terminal.scrollToBottom(), 50);
+                }
+            });
+
+            // Terminal resize
+            terminal.onResize(({ cols, rows }) => {
+                if (socket && sessionId) {
+                    socket.emit('terminal:resize', {
+                        sessionId: sessionId,
+                        cols: cols,
+                        rows: rows
+                    });
+                }
+            });
+
+            // Focus terminal
+            terminal.focus();
+        }
+
+        // Show toast
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Window resize
+            window.addEventListener('resize', () => {
+                if (terminal && terminal.fitAddon) {
+                    terminal.fitAddon.fit();
+                }
+            });
+
+            // Prevent scrolling
+            document.addEventListener('touchmove', function(e) {
+                if (!e.target.closest('.terminal-screen') && !e.target.closest('.controls-content')) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === 't') {
+                    e.preventDefault();
+                    createTerminal();
+                }
+                
+                if (e.ctrlKey && e.key === 'k') {
+                    e.preventDefault();
+                    toggleControls();
+                }
+            });
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', loadConfig);
+    </script>
+</body>
+</html>
