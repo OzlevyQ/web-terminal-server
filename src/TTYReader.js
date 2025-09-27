@@ -118,31 +118,133 @@ class TTYReader extends EventEmitter {
       // Check if we can read the TTY
       fs.accessSync(ttyDevice, fs.constants.R_OK);
       
-      // Open the TTY for reading
-      const fd = fs.openSync(ttyDevice, 'r');
-      const stream = fs.createReadStream(null, { 
-        fd,
-        encoding: 'utf8',
-        highWaterMark: 64 * 1024 // 64KB chunks
+      const ttyName = ttyDevice.split('/').pop();
+      let initialContent = '';
+      
+      // Try to get Terminal app content using AppleScript (macOS)
+      try {
+        const script = `
+          tell application "Terminal"
+            set allWindows to every window
+            repeat with win in allWindows
+              set allTabs to every tab of win
+              repeat with t in allTabs
+                if tty of t contains "${ttyName}" then
+                  return contents of t
+                end if
+              end repeat
+            end repeat
+            return ""
+          end tell
+        `;
+        
+        const terminalContent = execSync(`osascript -e '${script.replace(/\n/g, ' ')}'`, { 
+          encoding: 'utf8',
+          maxBuffer: 10 * 1024 * 1024 // 10MB buffer
+        });
+        
+        if (terminalContent && terminalContent.trim()) {
+          initialContent = terminalContent;
+          console.log(`Got Terminal content for ${ttyName}: ${initialContent.length} bytes`);
+        }
+      } catch (e) {
+        console.log('Could not get Terminal app content:', e.message);
+      }
+      
+      // Send initial content if we got any
+      if (initialContent) {
+        this.emit('data', sessionId, initialContent);
+        this.emit('data', sessionId, '\r\n\r\n=== Live TTY Stream ===\r\n');
+      } else {
+        this.emit('data', sessionId, `[Connected to ${ttyDevice}]\r\n[Waiting for new output...]\r\n\r\n`);
+      }
+      
+      // For macOS, use tail -f to follow the TTY
+      const { spawn } = require('child_process');
+      
+      // Use tail -f to follow new content
+      const tailProcess = spawn('tail', ['-f', ttyDevice], {
+        stdio: ['ignore', 'pipe', 'pipe']
       });
       
-      this.activeStreams.set(sessionId, { stream, fd, device: ttyDevice });
+      this.activeStreams.set(sessionId, { 
+        process: tailProcess,
+        device: ttyDevice,
+        type: 'tail'
+      });
       
       // Handle data from TTY
-      stream.on('data', (data) => {
-        this.emit('data', sessionId, data);
+      tailProcess.stdout.on('data', (data) => {
+        this.emit('data', sessionId, data.toString());
       });
       
-      stream.on('error', (error) => {
-        console.error(`TTY stream error for ${ttyDevice}:`, error);
+      tailProcess.stderr.on('data', (data) => {
+        // Ignore stderr for tail
+      });
+      
+      tailProcess.on('error', (error) => {
+        console.error(`TTY tail process error for ${ttyDevice}:`, error);
         this.emit('error', sessionId, error);
         this.detachFromTTY(sessionId);
       });
       
-      stream.on('close', () => {
+      tailProcess.on('close', () => {
         this.emit('close', sessionId);
         this.detachFromTTY(sessionId);
       });
+      
+      // Also start a periodic content refresh for Terminal app
+      if (initialContent) {
+        const refreshInterval = setInterval(() => {
+          try {
+            const script = `
+              tell application "Terminal"
+                set allWindows to every window
+                repeat with win in allWindows
+                  set allTabs to every tab of win
+                  repeat with t in allTabs
+                    if tty of t contains "${ttyName}" then
+                      return contents of t
+                    end if
+                  end repeat
+                end repeat
+                return ""
+              end tell
+            `;
+            
+            const newContent = execSync(`osascript -e '${script.replace(/\n/g, ' ')}'`, { 
+              encoding: 'utf8',
+              maxBuffer: 10 * 1024 * 1024
+            });
+            
+            if (newContent && newContent !== initialContent) {
+              // Send only the new part
+              if (newContent.startsWith(initialContent)) {
+                const diff = newContent.substring(initialContent.length);
+                if (diff.trim()) {
+                  this.emit('data', sessionId, diff);
+                }
+              } else {
+                // Full refresh if content changed completely
+                this.emit('data', sessionId, '\x1b[2J\x1b[H'); // Clear screen
+                this.emit('data', sessionId, newContent);
+              }
+              initialContent = newContent;
+            }
+          } catch (e) {
+            // Stop refresh if error
+            clearInterval(refreshInterval);
+          }
+        }, 2000); // Refresh every 2 seconds
+        
+        // Store interval for cleanup
+        if (!this.activeStreams.has(sessionId)) {
+          clearInterval(refreshInterval);
+        } else {
+          const stream = this.activeStreams.get(sessionId);
+          stream.refreshInterval = refreshInterval;
+        }
+      }
       
       return true;
     } catch (error) {
@@ -211,8 +313,13 @@ class TTYReader extends EventEmitter {
     }
 
     try {
-      if (streamInfo.type === 'mirror' && streamInfo.process) {
-        // Kill the script process
+      // Clear refresh interval if exists
+      if (streamInfo.refreshInterval) {
+        clearInterval(streamInfo.refreshInterval);
+      }
+      
+      if ((streamInfo.type === 'mirror' || streamInfo.type === 'cat' || streamInfo.type === 'tail') && streamInfo.process) {
+        // Kill the process
         streamInfo.process.kill('SIGTERM');
       } else if (streamInfo.stream) {
         // Close the read stream
