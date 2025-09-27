@@ -62,7 +62,7 @@ npx web-terminal-server
 ### From Source
 
 ```bash
-git clone https://github.com/web-terminal-server/web-terminal-server.git
+git clone https://github.com/OzlevyQ/web-terminal-server.git
 cd web-terminal-server
 npm install
 npm start
@@ -232,12 +232,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 - 📧 Email: support@web-terminal-server.org
-- 🐛 Issues: [GitHub Issues](https://github.com/web-terminal-server/web-terminal-server/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/web-terminal-server/web-terminal-server/discussions)
+- 🐛 Issues: [GitHub Issues](https://github.com/OzlevyQ/web-terminal-server/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/OzlevyQ/web-terminal-server/discussions)
 
 ## 🌟 Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=web-terminal-server/web-terminal-server&type=Date)](https://star-history.com/#web-terminal-server/web-terminal-server&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=OzlevyQ/web-terminal-server&type=Date)](https://star-history.com/#OzlevyQ/web-terminal-server&Date)
 
 ---
 
@@ -246,7 +246,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 </p>
 
 <p align="center">
-  <a href="https://github.com/web-terminal-server/web-terminal-server">
-    <img src="https://img.shields.io/github/stars/web-terminal-server/web-terminal-server?style=social" alt="GitHub stars">
+  <a href="https://github.com/OzlevyQ/web-terminal-server">
+    <img src="https://img.shields.io/github/stars/OzlevyQ/web-terminal-server?style=social" alt="GitHub stars">
   </a>
 </p>

@@ -30,11 +30,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/web-terminal-server/web-terminal-server.git"
+    "url": "https://github.com/OzlevyQ/web-terminal-server.git"
   },
-  "homepage": "https://github.com/web-terminal-server/web-terminal-server#readme",
+  "homepage": "https://github.com/OzlevyQ/web-terminal-server#readme",
   "bugs": {
-    "url": "https://github.com/web-terminal-server/web-terminal-server/issues"
+    "url": "https://github.com/OzlevyQ/web-terminal-server/issues"
   },
   "dependencies": {
     "express": "^4.18.2",
