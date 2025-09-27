@@ -7,6 +7,8 @@ const path = require('path');
 const fs = require('fs').promises;
 const config = require('./config');
 const TerminalManager = require('./TerminalManager');
+const TTYReader = require('./TTYReader');
+const TmuxManager = require('./TmuxManager');
 
 const app = express();
 const httpServer = createServer(app);
@@ -153,6 +155,69 @@ app.get('/', (req, res) => {
 // Serve monitor interface
 app.get('/monitor', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'monitor.html'));
+});
+
+// TTY and Tmux API endpoints
+const ttyReader = new TTYReader();
+const tmuxManager = new TmuxManager();
+
+// List available TTYs on the system
+app.get('/api/system/ttys', (req, res) => {
+  try {
+    const ttys = ttyReader.listActiveTTYs();
+    res.json({
+      success: true,
+      ttys,
+      currentUser: process.env.USER || process.env.USERNAME
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// List tmux sessions
+app.get('/api/tmux/sessions', (req, res) => {
+  try {
+    const available = tmuxManager.isTmuxAvailable();
+    const sessions = available ? tmuxManager.listSessions() : [];
+    res.json({
+      success: true,
+      tmuxAvailable: available,
+      sessions
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Create tmux session
+app.post('/api/tmux/create', (req, res) => {
+  try {
+    const { name, detached = true } = req.body;
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        error: 'Session name is required'
+      });
+    }
+    
+    const sessionName = tmuxManager.createSession(name, { detached });
+    res.json({
+      success: true,
+      sessionName
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
 });
 
 // Initialize Socket.io with optimizations
@@ -336,10 +401,95 @@ io.on('connection', (socket) => {
     }
   });
   
+  // Handle TTY attachment
+  socket.on('tty:attach', ({ device, mode = 'readonly' }) => {
+    try {
+      const sessionId = `tty-${Date.now()}`;
+      
+      if (mode === 'mirror') {
+        ttyReader.mirrorTTY(device, sessionId);
+      } else {
+        ttyReader.attachToTTY(device, sessionId);
+      }
+      
+      // Listen for TTY data
+      ttyReader.on('data', (sid, data) => {
+        if (sid === sessionId) {
+          socket.emit('tty:data', { sessionId, data });
+        }
+      });
+      
+      ttyReader.on('error', (sid, error) => {
+        if (sid === sessionId) {
+          socket.emit('tty:error', { sessionId, error: error.message });
+        }
+      });
+      
+      ttyReader.on('close', (sid) => {
+        if (sid === sessionId) {
+          socket.emit('tty:closed', { sessionId });
+        }
+      });
+      
+      socket.emit('tty:attached', { sessionId, device, mode });
+    } catch (error) {
+      socket.emit('tty:error', { error: error.message });
+    }
+  });
+  
+  // Handle TTY detachment
+  socket.on('tty:detach', ({ sessionId }) => {
+    try {
+      ttyReader.detachFromTTY(sessionId);
+      socket.emit('tty:detached', { sessionId });
+    } catch (error) {
+      socket.emit('tty:error', { sessionId, error: error.message });
+    }
+  });
+  
+  // Handle tmux attachment
+  socket.on('tmux:attach', ({ sessionName, mode = 'shared' }) => {
+    try {
+      const result = tmuxManager.attachToSession(sessionName, mode);
+      const sessionId = `tmux-${sessionName}-${Date.now()}`;
+      
+      // Set up monitoring
+      const monitor = tmuxManager.monitorSession(sessionName, (error, data) => {
+        if (error) {
+          socket.emit('tmux:error', { sessionId, error: error.message });
+        } else {
+          socket.emit('tmux:data', { sessionId, data });
+        }
+      });
+      
+      // Store monitor for cleanup
+      socket.tmuxMonitor = monitor;
+      
+      socket.emit('tmux:attached', { sessionId, sessionName, mode });
+    } catch (error) {
+      socket.emit('tmux:error', { error: error.message });
+    }
+  });
+  
+  // Handle tmux command sending
+  socket.on('tmux:send', ({ sessionName, command }) => {
+    try {
+      tmuxManager.sendToSession(sessionName, command);
+      socket.emit('tmux:sent', { sessionName });
+    } catch (error) {
+      socket.emit('tmux:error', { sessionName, error: error.message });
+    }
+  });
+  
   // Handle disconnect
   socket.on('disconnect', () => {
     console.log(`Disconnected: ${socket.id}`);
     terminalManager.handleDisconnect(socket.id);
+    
+    // Clean up tmux monitor if exists
+    if (socket.tmuxMonitor) {
+      socket.tmuxMonitor.stop();
+    }
   });
 });
 

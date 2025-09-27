@@ -555,6 +555,10 @@
                     <span class="icon">+</span>
                     New Terminal
                 </button>
+                <button class="header-btn" onclick="showExistingSessions()">
+                    <span class="icon">📡</span>
+                    Connect
+                </button>
                 <button class="header-btn" onclick="showStats()">
                     <span class="icon">ⓘ</span>
                     Stats
@@ -1027,6 +1031,244 @@
                 showToast(`Rows: ${terminal.rows}, Cols: ${terminal.cols}`);
             } else {
                 showToast('No active terminal');
+            }
+        }
+
+        // Show existing sessions dialog
+        async function showExistingSessions() {
+            try {
+                // Fetch TTYs and tmux sessions
+                const [ttyResponse, tmuxResponse] = await Promise.all([
+                    fetch('/api/system/ttys'),
+                    fetch('/api/tmux/sessions')
+                ]);
+
+                const ttyData = await ttyResponse.json();
+                const tmuxData = await tmuxResponse.json();
+
+                let html = '<div style="max-height: 400px; overflow-y: auto;">';
+                
+                // Show TTYs
+                if (ttyData.success && ttyData.ttys.length > 0) {
+                    html += '<h3>System Terminals (TTYs)</h3>';
+                    html += '<table style="width: 100%; border-collapse: collapse;">';
+                    html += '<tr><th>User</th><th>TTY</th><th>Process</th><th>Action</th></tr>';
+                    
+                    ttyData.ttys.forEach(tty => {
+                        html += '<tr>';
+                        html += `<td>${tty.user}</td>`;
+                        html += `<td>${tty.tty}</td>`;
+                        html += `<td>${tty.process || 'N/A'}</td>`;
+                        html += '<td>';
+                        if (tty.accessible) {
+                            html += `<button onclick="attachToTTY('${tty.device}', 'readonly')">View</button> `;
+                            html += `<button onclick="attachToTTY('${tty.device}', 'mirror')">Mirror</button>`;
+                        } else {
+                            html += '<span style="color: #999;">No Access</span>';
+                        }
+                        html += '</td>';
+                        html += '</tr>';
+                    });
+                    html += '</table>';
+                }
+
+                // Show tmux sessions
+                if (tmuxData.tmuxAvailable && tmuxData.sessions.length > 0) {
+                    html += '<h3 style="margin-top: 20px;">Tmux Sessions</h3>';
+                    html += '<table style="width: 100%; border-collapse: collapse;">';
+                    html += '<tr><th>Name</th><th>Windows</th><th>Attached</th><th>Action</th></tr>';
+                    
+                    tmuxData.sessions.forEach(session => {
+                        html += '<tr>';
+                        html += `<td>${session.name}</td>`;
+                        html += `<td>${session.windows}</td>`;
+                        html += `<td>${session.attached ? 'Yes' : 'No'}</td>`;
+                        html += '<td>';
+                        html += `<button onclick="attachToTmux('${session.name}', 'shared')">Attach</button> `;
+                        html += `<button onclick="attachToTmux('${session.name}', 'readonly')">View Only</button>`;
+                        html += '</td>';
+                        html += '</tr>';
+                    });
+                    html += '</table>';
+                }
+
+                if (!ttyData.ttys?.length && !tmuxData.sessions?.length) {
+                    html += '<p>No existing sessions found.</p>';
+                    html += '<p>Tip: Use tmux to create persistent sessions that survive disconnections.</p>';
+                }
+
+                html += '</div>';
+
+                // Show in a dialog
+                const dialog = document.createElement('div');
+                dialog.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; padding: 20px; border: 1px solid #444; border-radius: 8px; z-index: 10000; max-width: 600px; width: 90%; color: #fff;';
+                dialog.innerHTML = '<h2 style="margin-top: 0;">Connect to Existing Session</h2>' + html + 
+                    '<button onclick="this.parentElement.remove()" style="margin-top: 10px; padding: 5px 15px; background: #007aff; color: white; border: none; border-radius: 4px; cursor: pointer;">Close</button>';
+                document.body.appendChild(dialog);
+            } catch (error) {
+                showToast('Failed to fetch sessions: ' + error.message);
+            }
+        }
+
+        // Attach to TTY
+        function attachToTTY(device, mode) {
+            // Close dialog
+            const dialog = document.querySelector('div[style*="position: fixed"]');
+            if (dialog) dialog.remove();
+
+            // Clear welcome
+            const welcome = document.getElementById('welcome');
+            if (welcome) welcome.style.display = 'none';
+
+            // Create terminal if not already created
+            if (!terminal) {
+                // Create xterm
+                terminal = new Terminal({
+                    cursorBlink: true,
+                    fontSize: isMobile ? 12 : 14,
+                    fontFamily: '"Cascadia Code", "Courier New", monospace',
+                    theme: {
+                        background: '#000814',
+                        foreground: '#e0e0e0',
+                        cursor: '#00ff88'
+                    },
+                    scrollback: 5000,
+                    convertEol: true
+                });
+
+                // Add fit addon
+                const fitAddon = new FitAddon.FitAddon();
+                terminal.loadAddon(fitAddon);
+                terminal.fitAddon = fitAddon;
+
+                // Open terminal
+                const screen = document.getElementById('terminalScreen');
+                terminal.open(screen);
+                fitAddon.fit();
+
+                // Create socket if not exists
+                if (!socket) {
+                    socket = io(config.socketUrl || window.location.origin, {
+                        transports: ['websocket'],
+                        reconnection: true
+                    });
+                }
+            }
+
+            // Store TTY session info
+            window.ttySession = { device, mode };
+
+            // Emit attach event
+            socket.emit('tty:attach', { device, mode });
+
+            // Listen for TTY events (remove old listeners first)
+            socket.off('tty:attached');
+            socket.off('tty:data');
+            socket.off('tty:error');
+            socket.off('tty:closed');
+
+            socket.on('tty:attached', (data) => {
+                console.log('Attached to TTY:', data);
+                currentSessionId = data.sessionId;
+                showToast(`Connected to ${data.device} (${data.mode} mode)`);
+            });
+
+            socket.on('tty:data', (data) => {
+                if (data.sessionId === currentSessionId) {
+                    terminal.write(data.data);
+                }
+            });
+
+            socket.on('tty:error', (data) => {
+                console.error('TTY Error:', data);
+                showToast('TTY Error: ' + data.error);
+            });
+
+            socket.on('tty:closed', (data) => {
+                if (data.sessionId === currentSessionId) {
+                    terminal.write('\r\n[TTY Session Closed]\r\n');
+                }
+            });
+        }
+
+        // Attach to tmux session
+        function attachToTmux(sessionName, mode) {
+            // Close dialog
+            const dialog = document.querySelector('div[style*="position: fixed"]');
+            if (dialog) dialog.remove();
+
+            // Clear welcome
+            const welcome = document.getElementById('welcome');
+            if (welcome) welcome.style.display = 'none';
+
+            // Create terminal if not already created
+            if (!terminal) {
+                // Create xterm
+                terminal = new Terminal({
+                    cursorBlink: true,
+                    fontSize: isMobile ? 12 : 14,
+                    fontFamily: '"Cascadia Code", "Courier New", monospace',
+                    theme: {
+                        background: '#000814',
+                        foreground: '#e0e0e0',
+                        cursor: '#00ff88'
+                    },
+                    scrollback: 5000,
+                    convertEol: true
+                });
+
+                // Add fit addon
+                const fitAddon = new FitAddon.FitAddon();
+                terminal.loadAddon(fitAddon);
+                terminal.fitAddon = fitAddon;
+
+                // Open terminal
+                const screen = document.getElementById('terminalScreen');
+                terminal.open(screen);
+                fitAddon.fit();
+
+                // Create socket if not exists
+                if (!socket) {
+                    socket = io(config.socketUrl || window.location.origin, {
+                        transports: ['websocket'],
+                        reconnection: true
+                    });
+                }
+            }
+
+            // Store tmux session info
+            window.tmuxSession = { sessionName, mode };
+
+            // Emit attach event
+            socket.emit('tmux:attach', { sessionName, mode });
+
+            // Listen for tmux events (remove old listeners first)
+            socket.off('tmux:attached');
+            socket.off('tmux:data');
+            socket.off('tmux:error');
+
+            socket.on('tmux:attached', (data) => {
+                console.log('Attached to tmux:', data);
+                currentSessionId = data.sessionId;
+                showToast(`Connected to tmux session: ${data.sessionName}`);
+            });
+
+            socket.on('tmux:data', (data) => {
+                if (data.sessionId === currentSessionId) {
+                    terminal.write(data.data);
+                }
+            });
+
+            socket.on('tmux:error', (data) => {
+                console.error('Tmux Error:', data);
+                showToast('Tmux Error: ' + data.error);
+            });
+
+            // Handle tmux input
+            if (mode === 'shared') {
+                terminal.onData((data) => {
+                    socket.emit('tmux:send', { sessionName, command: data });
+                });
             }
         }
 
