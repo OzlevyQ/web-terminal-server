@@ -55,7 +55,7 @@ Environment Variables (.env):
   BASE_URL           Custom base URL for sharing
   NGROK_AUTH_TOKEN   Ngrok authentication token
   
-For more info: https://github.com/yourusername/web-terminal-server
+For more info: https://github.com/OzlevyQ/web-terminal-server
 `);
   process.exit(0);
 }
@@ -99,35 +99,51 @@ let ngrokUrl = null;
 if (flags.ngrok) {
   setTimeout(async () => {
     console.log('\n🌐 Starting ngrok tunnel...');
+    const port = process.env.TERMINAL_PORT || 5000;
+    let connected = false;
     
+    // Try using ngrok module first
     try {
-      // Try using ngrok API to get the URL
       let ngrok;
-      const port = process.env.TERMINAL_PORT || 5000;
       
       // Check if ngrok module is available
       try {
         ngrok = require('ngrok');
       } catch (moduleError) {
-        // Module not found, try to install it
-        console.log('📦 Ngrok module not found. Installing...');
-        const { execSync } = require('child_process');
+        // Try to require from parent directories
         try {
-          execSync('npm install ngrok --save-optional', { stdio: 'inherit' });
-          console.log('✅ Ngrok installed, please restart with --ngrok flag');
-          return;
-        } catch (installError) {
-          console.log('\n⚠️  Could not install ngrok automatically.');
-          console.log('   Please install manually: npm install ngrok');
-          throw new Error('Ngrok module not available');
+          ngrok = require(path.join(process.cwd(), 'node_modules', 'ngrok'));
+        } catch {
+          // Module not found, try to install it
+          console.log('📦 Ngrok module not found. Installing...');
+          const { execSync } = require('child_process');
+          try {
+            execSync('npm install ngrok --no-save', { 
+              stdio: 'inherit',
+              cwd: process.cwd()
+            });
+            ngrok = require('ngrok');
+          } catch (installError) {
+            console.log('\n⚠️  Could not install ngrok module automatically.');
+            throw new Error('Ngrok module not available');
+          }
         }
       }
       
-      // Connect with ngrok
-      ngrokUrl = await ngrok.connect({
+      // Set timeout for ngrok connection
+      const connectPromise = ngrok.connect({
         addr: port,
-        authtoken: process.env.NGROK_AUTH_TOKEN
+        authtoken: process.env.NGROK_AUTH_TOKEN || undefined
       });
+      
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Ngrok connection timeout')), 10000);
+      });
+      
+      // Race between connection and timeout
+      ngrokUrl = await Promise.race([connectPromise, timeoutPromise]);
+      connected = true;
       
       console.log('\n╔════════════════════════════════════════════════════════════════╗');
       console.log('║                    🌐 NGROK TUNNEL ACTIVE                      ║');
@@ -136,10 +152,13 @@ if (flags.ngrok) {
       console.log('📋 Share this URL to access your terminal from anywhere!');
       console.log('\n═══════════════════════════════════════════════════════════════');
       
+      // Update BASE_URL environment variable for the server
+      process.env.BASE_URL = ngrokUrl;
+      
       // Open ngrok URL in browser
       if (!flags['no-browser']) {
         setTimeout(() => {
-          console.log(`\n🌐 Opening ngrok URL in browser: ${ngrokUrl}`);
+          console.log(`\n🌐 Opening browser at: ${ngrokUrl}`);
           const platform = process.platform;
           const opener = platform === 'darwin' ? 'open' : 
                         platform === 'win32' ? 'start' : 'xdg-open';
@@ -147,34 +166,55 @@ if (flags.ngrok) {
         }, 1000);
       }
       
-      // Update BASE_URL environment variable for the server
-      process.env.BASE_URL = ngrokUrl;
-      
     } catch (error) {
-      // Fallback to CLI ngrok
-      console.log('📱 Trying ngrok CLI fallback...');
+      console.log('⚠️  Ngrok module failed:', error.message);
+    }
+    
+    // If module didn't work, try CLI as fallback
+    if (!connected) {
+      console.log('📱 Trying ngrok CLI...');
       
-      // Try using CLI ngrok as fallback
-      const ngrokProcess = spawn('ngrok', ['http', process.env.TERMINAL_PORT || '5000'], {
-        stdio: 'pipe'
-      });
+      // Check if ngrok CLI exists
+      const { execSync } = require('child_process');
+      let hasNgrokCli = false;
       
-      let foundUrl = false;
+      try {
+        execSync('ngrok version', { stdio: 'ignore' });
+        hasNgrokCli = true;
+      } catch {
+        console.log('\n⚠️  Ngrok CLI not found.');
+        console.log('   Install with: brew install ngrok (Mac)');
+        console.log('   Or download from: https://ngrok.com/download');
+        console.log('\n📌 Tip: Add NGROK_AUTH_TOKEN to your .env file for better experience');
+        return;
+      }
       
-      ngrokProcess.stdout.on('data', (data) => {
-        const output = data.toString();
-        if (!foundUrl && output.includes('url=')) {
-          const match = output.match(/url=(https?:\/\/[^\s]+)/);
-          if (match) {
-            foundUrl = true;
-            ngrokUrl = match[1];
+      if (hasNgrokCli) {
+        // Use exec to get URL from ngrok
+        try {
+          // Start ngrok in background
+          const ngrokCmd = spawn('ngrok', ['http', port], {
+            detached: true,
+            stdio: 'ignore'
+          });
+          
+          // Give ngrok time to start
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          
+          // Get the URL using ngrok API
+          const result = execSync('curl -s http://localhost:4040/api/tunnels', { encoding: 'utf8' });
+          const data = JSON.parse(result);
+          
+          if (data.tunnels && data.tunnels.length > 0) {
+            ngrokUrl = data.tunnels[0].public_url;
+            
             console.log('\n╔════════════════════════════════════════════════════════════════╗');
             console.log('║                    🌐 NGROK TUNNEL ACTIVE (CLI)                ║');
             console.log('╚════════════════════════════════════════════════════════════════╝');
             console.log(`\n🔗 Public URL: ${ngrokUrl}`);
             console.log('📋 Share this URL to access your terminal from anywhere!');
             
-            // Open URL
+            // Open URL in browser
             if (!flags['no-browser']) {
               const platform = process.platform;
               const opener = platform === 'darwin' ? 'open' : 
@@ -182,19 +222,12 @@ if (flags.ngrok) {
               spawn(opener, [ngrokUrl], { detached: true, stdio: 'ignore' });
             }
           }
+        } catch (error) {
+          console.log('⚠️  Could not get ngrok URL. Please check ngrok dashboard.');
         }
-      });
-      
-      ngrokProcess.stderr.on('data', (data) => {
-        const errorMsg = data.toString();
-        if (errorMsg.includes('command not found') || errorMsg.includes('not recognized')) {
-          console.log('\n⚠️  Ngrok CLI not found. Please install:');
-          console.log('   npm install -g ngrok');
-          console.log('   Or download from: https://ngrok.com/download');
-        }
-      });
+      }
     }
-  }, 2000);
+  }, 3000); // Give server time to start
 }
 
 // Open browser unless disabled (only if not using ngrok)
@@ -215,6 +248,12 @@ if (!flags['no-browser'] && !flags.ngrok) {
 // Handle graceful shutdown
 process.on('SIGINT', () => {
   console.log('\n\n👋 Shutting down Web Terminal Server...');
+  
+  // Kill ngrok if running
+  try {
+    require('child_process').execSync('pkill ngrok', { stdio: 'ignore' });
+  } catch {}
+  
   serverProcess.kill('SIGINT');
   process.exit(0);
 });
