@@ -196,56 +196,96 @@ if (flags.ngrok) {
       }
       
       if (hasNgrokCli) {
-        // Use exec to get URL from ngrok
         try {
-          // Start ngrok in background
-          const ngrokCmd = spawn('ngrok', ['http', port], {
-            detached: true,
-            stdio: 'ignore'
+          // Kill any existing ngrok processes first
+          try {
+            execSync('pkill ngrok', { stdio: 'ignore' });
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          } catch {}
+          
+          // Start ngrok with output capture
+          console.log('⏳ Starting ngrok tunnel...');
+          const ngrokProcess = spawn('ngrok', ['http', port.toString(), '--log=stdout'], {
+            stdio: ['ignore', 'pipe', 'pipe']
           });
           
-          // Give ngrok time to start
-          await new Promise(resolve => setTimeout(resolve, 4000));
+          let output = '';
+          let timeoutId;
           
-          // Try to get the URL using ngrok API
-          try {
-            const result = execSync('curl -s http://127.0.0.1:4040/api/tunnels', { encoding: 'utf8' });
-            const data = JSON.parse(result);
+          // Set up a promise that resolves when URL is found or timeout
+          const urlPromise = new Promise((resolve) => {
+            // Timeout after 10 seconds
+            timeoutId = setTimeout(() => {
+              resolve(null);
+            }, 10000);
             
-            if (data.tunnels && data.tunnels.length > 0) {
-              // Find the https tunnel
-              const httpsTunnel = data.tunnels.find(t => t.proto === 'https') || data.tunnels[0];
-              ngrokUrl = httpsTunnel.public_url;
+            // Listen for ngrok output
+            ngrokProcess.stdout.on('data', (data) => {
+              output += data.toString();
               
-              console.log('\n╔════════════════════════════════════════════════════════════════╗');
-              console.log('║                    🌐 NGROK TUNNEL ACTIVE                      ║');
-              console.log('╚════════════════════════════════════════════════════════════════╝');
-              console.log(`\n🔗 Public URL: ${ngrokUrl}`);
-              console.log('📋 Share this URL to access your terminal from anywhere!');
-              console.log('\n📊 Ngrok Dashboard: http://127.0.0.1:4040');
-              console.log('═══════════════════════════════════════════════════════════════\n');
-              
-              // Open URL in browser
-              if (!flags['no-browser']) {
-                setTimeout(() => {
-                  console.log(`🌐 Opening browser at: ${ngrokUrl}`);
-                  const platform = process.platform;
-                  const opener = platform === 'darwin' ? 'open' : 
-                                platform === 'win32' ? 'start' : 'xdg-open';
-                  spawn(opener, [ngrokUrl], { detached: true, stdio: 'ignore' });
-                }, 1000);
+              // Look for URL in ngrok output
+              const urlMatch = output.match(/url=(https:\/\/[^\s]+)/);
+              if (urlMatch) {
+                clearTimeout(timeoutId);
+                resolve(urlMatch[1]);
               }
-            } else {
-              throw new Error('No tunnels found');
+            });
+            
+            ngrokProcess.stderr.on('data', (data) => {
+              const error = data.toString();
+              if (error.includes('ERROR')) {
+                console.log('⚠️  Ngrok error:', error);
+              }
+            });
+          });
+          
+          // Wait for URL or timeout
+          ngrokUrl = await urlPromise;
+          
+          // If we didn't get URL from output, try API
+          if (!ngrokUrl) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            try {
+              const result = execSync('curl -s http://127.0.0.1:4040/api/tunnels', { encoding: 'utf8' });
+              const data = JSON.parse(result);
+              
+              if (data.tunnels && data.tunnels.length > 0) {
+                const httpsTunnel = data.tunnels.find(t => t.proto === 'https') || data.tunnels[0];
+                ngrokUrl = httpsTunnel.public_url;
+              }
+            } catch (e) {
+              // API failed, ngrok might still be starting
             }
-          } catch (apiError) {
-            // If API doesn't work, show manual instructions
+          }
+          
+          if (ngrokUrl) {
+            console.log('\n╔════════════════════════════════════════════════════════════════╗');
+            console.log('║                    🌐 NGROK TUNNEL ACTIVE                      ║');
+            console.log('╚════════════════════════════════════════════════════════════════╝');
+            console.log(`\n🔗 Public URL: ${ngrokUrl}`);
+            console.log('📋 Share this URL to access your terminal from anywhere!');
+            console.log('\n📊 Ngrok Dashboard: http://127.0.0.1:4040');
+            console.log('═══════════════════════════════════════════════════════════════\n');
+            
+            // Open URL in browser
+            if (!flags['no-browser']) {
+              setTimeout(() => {
+                console.log(`🌐 Opening browser at: ${ngrokUrl}`);
+                const platform = process.platform;
+                const opener = platform === 'darwin' ? 'open' : 
+                              platform === 'win32' ? 'start' : 'xdg-open';
+                spawn(opener, [ngrokUrl], { detached: true, stdio: 'ignore' });
+              }, 1000);
+            }
+          } else {
+            // If we couldn't get the URL, show manual instructions
             console.log('\n╔════════════════════════════════════════════════════════════════╗');
             console.log('║                    🌐 NGROK TUNNEL STARTED                     ║');
             console.log('╚════════════════════════════════════════════════════════════════╝');
             console.log('\n📌 Ngrok is running! To see your public URL:');
             console.log('   1. Open new terminal');
-            console.log('   2. Run: curl http://127.0.0.1:4040/api/tunnels | grep public_url');
+            console.log('   2. Run: ./check-ngrok.sh');
             console.log('   OR');
             console.log('   3. Open browser: http://127.0.0.1:4040');
             console.log('\n💡 Tip: The URL format is usually:');
