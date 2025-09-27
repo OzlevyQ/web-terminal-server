@@ -95,35 +95,86 @@ const serverProcess = spawn('node', [serverPath], {
 });
 
 // Handle ngrok if requested
+let ngrokUrl = null;
 if (flags.ngrok) {
-  setTimeout(() => {
+  setTimeout(async () => {
     console.log('\n🌐 Starting ngrok tunnel...');
-    const ngrokProcess = spawn('ngrok', ['http', process.env.TERMINAL_PORT || '5000'], {
-      stdio: 'pipe'
-    });
     
-    ngrokProcess.stdout.on('data', (data) => {
-      const output = data.toString();
-      if (output.includes('url=')) {
-        const match = output.match(/url=(https?:\/\/[^\s]+)/);
-        if (match) {
-          console.log(`\n🔗 Public URL: ${match[1]}`);
-          console.log('📋 Share this URL to access your terminal from anywhere!');
-        }
+    try {
+      // Try using ngrok API to get the URL
+      const ngrok = require('ngrok');
+      const port = process.env.TERMINAL_PORT || 5000;
+      
+      ngrokUrl = await ngrok.connect({
+        addr: port,
+        authtoken: process.env.NGROK_AUTH_TOKEN
+      });
+      
+      console.log('\n╔════════════════════════════════════════════════════════════════╗');
+      console.log('║                    🌐 NGROK TUNNEL ACTIVE                      ║');
+      console.log('╚════════════════════════════════════════════════════════════════╝');
+      console.log(`\n🔗 Public URL: ${ngrokUrl}`);
+      console.log('📋 Share this URL to access your terminal from anywhere!');
+      console.log('\n═══════════════════════════════════════════════════════════════');
+      
+      // Open ngrok URL in browser
+      if (!flags['no-browser']) {
+        setTimeout(() => {
+          console.log(`\n🌐 Opening ngrok URL in browser: ${ngrokUrl}`);
+          const platform = process.platform;
+          const opener = platform === 'darwin' ? 'open' : 
+                        platform === 'win32' ? 'start' : 'xdg-open';
+          spawn(opener, [ngrokUrl], { detached: true, stdio: 'ignore' });
+        }, 1000);
       }
-    });
-    
-    ngrokProcess.stderr.on('data', (data) => {
-      if (data.toString().includes('command not found')) {
-        console.log('\n⚠️  Ngrok not installed. Install with: npm install -g ngrok');
+      
+      // Update BASE_URL environment variable for the server
+      process.env.BASE_URL = ngrokUrl;
+      
+    } catch (error) {
+      // Fallback to CLI ngrok if module not available
+      console.log('📦 Installing ngrok module...');
+      const { execSync } = require('child_process');
+      try {
+        execSync('npm install ngrok', { stdio: 'inherit' });
+        console.log('✅ Ngrok installed, please restart with --ngrok flag');
+      } catch {
+        console.log('\n⚠️  Please install ngrok manually:');
+        console.log('   npm install ngrok');
+        console.log('   Or globally: npm install -g ngrok');
         console.log('   Or visit: https://ngrok.com/download');
+        
+        // Try using CLI ngrok as fallback
+        const ngrokProcess = spawn('ngrok', ['http', process.env.TERMINAL_PORT || '5000'], {
+          stdio: 'pipe'
+        });
+        
+        ngrokProcess.stdout.on('data', (data) => {
+          const output = data.toString();
+          if (output.includes('url=')) {
+            const match = output.match(/url=(https?:\/\/[^\s]+)/);
+            if (match) {
+              ngrokUrl = match[1];
+              console.log(`\n🔗 Public URL: ${ngrokUrl}`);
+              console.log('📋 Share this URL to access your terminal from anywhere!');
+              
+              // Open URL
+              if (!flags['no-browser']) {
+                const platform = process.platform;
+                const opener = platform === 'darwin' ? 'open' : 
+                              platform === 'win32' ? 'start' : 'xdg-open';
+                spawn(opener, [ngrokUrl], { detached: true, stdio: 'ignore' });
+              }
+            }
+          }
+        });
       }
-    });
+    }
   }, 2000);
 }
 
-// Open browser unless disabled
-if (!flags['no-browser']) {
+// Open browser unless disabled (only if not using ngrok)
+if (!flags['no-browser'] && !flags.ngrok) {
   setTimeout(() => {
     const port = process.env.TERMINAL_PORT || 5000;
     const url = `http://localhost:${port}`;
