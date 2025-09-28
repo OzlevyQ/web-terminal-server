@@ -10,6 +10,11 @@ const TerminalManager = require('./TerminalManager');
 const TTYReader = require('./TTYReader');
 const TmuxManager = require('./TmuxManager');
 
+// Import orchestrator components
+const PortMonitor = require('./orchestrator/PortMonitor');
+const ProcessTracker = require('./orchestrator/ProcessTracker');
+const AutoProxy = require('./orchestrator/AutoProxy');
+
 const app = express();
 const httpServer = createServer(app);
 
@@ -157,9 +162,54 @@ app.get('/monitor', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'monitor.html'));
 });
 
+// Serve ports dashboard
+app.get('/ports', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'ports.html'));
+});
+
 // TTY and Tmux API endpoints
 const ttyReader = new TTYReader();
 const tmuxManager = new TmuxManager();
+
+// Initialize Orchestrator components
+const portMonitor = new PortMonitor({ scanInterval: 3000 }); // Scan every 3 seconds
+const processTracker = new ProcessTracker();
+const autoProxy = new AutoProxy(app, { basePath: '/auto' });
+
+// Start port monitoring
+portMonitor.on('port:discovered', async (portInfo) => {
+  console.log(`🔍 New port discovered: ${portInfo.port} (${portInfo.processName})`);
+  
+  // Get detailed process info
+  const processInfo = await processTracker.getProcessInfo(portInfo.pid);
+  if (processInfo) {
+    portInfo.framework = processInfo.framework;
+    portInfo.appType = processInfo.appType;
+    portInfo.cwd = processInfo.cwd;
+  }
+  
+  // Create proxy automatically
+  const proxy = autoProxy.createProxy(portInfo);
+  
+  // Emit to all connected clients
+  io.emit('port:discovered', {
+    ...portInfo,
+    proxyUrl: proxy.baseUrl,
+    routeName: proxy.routeName
+  });
+});
+
+portMonitor.on('port:closed', (portInfo) => {
+  console.log(`🔒 Port closed: ${portInfo.port}`);
+  autoProxy.removeProxy(portInfo.port);
+  io.emit('port:closed', { port: portInfo.port });
+});
+
+// Start monitoring after server starts
+setTimeout(() => {
+  portMonitor.startMonitoring();
+  console.log('🚀 Port monitoring started');
+}, 1000);
 
 // List available TTYs on the system
 app.get('/api/system/ttys', (req, res) => {
@@ -217,6 +267,131 @@ app.post('/api/tmux/create', (req, res) => {
       success: false,
       error: error.message
     });
+  }
+});
+
+// Orchestrator API endpoints
+
+// Get all discovered ports
+app.get('/api/ports', (req, res) => {
+  const ports = portMonitor.getKnownPorts();
+  const proxies = autoProxy.getProxies();
+  
+  // Merge port and proxy info
+  const result = ports.map(port => {
+    const proxy = proxies.find(p => p.port === port.port);
+    return {
+      ...port,
+      hasProxy: !!proxy,
+      proxyUrl: proxy ? proxy.baseUrl : null,
+      routeName: proxy ? proxy.routeName : null
+    };
+  });
+  
+  res.json({
+    success: true,
+    ports: result,
+    stats: portMonitor.getStats()
+  });
+});
+
+// Get process information
+app.get('/api/process/:pid', async (req, res) => {
+  try {
+    const pid = parseInt(req.params.pid);
+    const info = await processTracker.getProcessInfo(pid);
+    
+    if (!info) {
+      return res.status(404).json({
+        success: false,
+        error: 'Process not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      process: info
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Get proxy information
+app.get('/api/proxies', (req, res) => {
+  const stats = autoProxy.getStats();
+  res.json({
+    success: true,
+    ...stats
+  });
+});
+
+// Create manual proxy
+app.post('/api/proxy/create', (req, res) => {
+  try {
+    const { port, routeName, processName, framework } = req.body;
+    
+    if (!port) {
+      return res.status(400).json({
+        success: false,
+        error: 'Port is required'
+      });
+    }
+    
+    const proxy = routeName 
+      ? autoProxy.createManualProxy(routeName, port, { processName, framework })
+      : autoProxy.createProxy({ port, processName, framework });
+    
+    res.json({
+      success: true,
+      proxy: {
+        port: proxy.port,
+        routeName: proxy.routeName,
+        baseUrl: proxy.baseUrl,
+        targetUrl: proxy.targetUrl
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Remove proxy
+app.delete('/api/proxy/:port', (req, res) => {
+  try {
+    const port = parseInt(req.params.port);
+    const removed = autoProxy.removeProxy(port);
+    
+    res.json({
+      success: removed,
+      message: removed ? 'Proxy removed' : 'Proxy not found'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Toggle port monitoring
+app.post('/api/monitor/:action', (req, res) => {
+  const action = req.params.action;
+  
+  if (action === 'start') {
+    portMonitor.startMonitoring();
+    res.json({ success: true, message: 'Monitoring started' });
+  } else if (action === 'stop') {
+    portMonitor.stopMonitoring();
+    res.json({ success: true, message: 'Monitoring stopped' });
+  } else {
+    res.status(400).json({ success: false, error: 'Invalid action' });
   }
 });
 
