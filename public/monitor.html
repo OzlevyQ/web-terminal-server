@@ -627,6 +627,133 @@
                 transform: scale(0.95);
             }
         }
+
+        /* Help Modal */
+        .help-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .help-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .help-content {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .help-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .help-header h2 {
+            font-size: 24px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .help-close {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .help-close:hover {
+            background: var(--warning-color);
+            border-color: var(--warning-color);
+            color: white;
+        }
+
+        .help-section {
+            margin-bottom: 24px;
+        }
+
+        .help-section h3 {
+            font-size: 18px;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .help-section p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .help-section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .help-section li {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            padding-left: 24px;
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .help-section li::before {
+            content: '→';
+            position: absolute;
+            left: 8px;
+            color: var(--accent-color);
+        }
     </style>
 </head>
 <body>
@@ -640,6 +767,10 @@
                 <span>Sessions Monitor</span>
             </div>
             <div style="display: flex; gap: 10px;">
+                <button class="refresh-btn" onclick="showHelp()">
+                    <i data-lucide="help-circle" style="width: 16px; height: 16px;"></i>
+                    <span>Help</span>
+                </button>
                 <button class="refresh-btn" onclick="window.location.href='/'">
                     <i data-lucide="terminal" style="width: 16px; height: 16px;"></i>
                     <span>Terminal</span>
@@ -1212,6 +1343,112 @@
                 alert('Failed to delete some sessions. Please try again.');
             }
         }
+
+        // Help modal functions
+        function showHelp() {
+            const modal = document.getElementById('helpModal');
+            modal.classList.add('show');
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        function closeHelp(event) {
+            if (!event || event.target.id === 'helpModal') {
+                const modal = document.getElementById('helpModal');
+                modal.classList.remove('show');
+            }
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeHelp();
+            }
+        });
     </script>
+
+    <!-- Help Modal -->
+    <div class="help-modal" id="helpModal" onclick="closeHelp(event)">
+        <div class="help-content" onclick="event.stopPropagation()">
+            <div class="help-header">
+                <h2>
+                    <i data-lucide="info" style="width: 24px; height: 24px;"></i>
+                    Sessions Monitor Help
+                </h2>
+                <button class="help-close" onclick="closeHelp()">
+                    <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+                </button>
+            </div>
+
+            <div class="help-section">
+                <h3>
+                    <i data-lucide="activity" style="width: 18px; height: 18px;"></i>
+                    What is Sessions Monitor?
+                </h3>
+                <p>
+                    Sessions Monitor provides a centralized dashboard to view and manage all your terminal sessions.
+                    It tracks both active running sessions and saved persistent sessions.
+                </p>
+            </div>
+
+            <div class="help-section">
+                <h3>
+                    <i data-lucide="zap" style="width: 18px; height: 18px;"></i>
+                    Features
+                </h3>
+                <ul>
+                    <li><strong>Active Sessions:</strong> View all currently running terminal sessions</li>
+                    <li><strong>Saved Sessions:</strong> Access persistent sessions that can be restored</li>
+                    <li><strong>Bulk Operations:</strong> Select multiple sessions for batch deletion</li>
+                    <li><strong>Quick Access:</strong> Open any session with a single click</li>
+                    <li><strong>Session Sharing:</strong> Copy shareable links to specific sessions</li>
+                    <li><strong>Real-time Stats:</strong> Monitor total sessions, saved sessions, and uptime</li>
+                </ul>
+            </div>
+
+            <div class="help-section">
+                <h3>
+                    <i data-lucide="terminal" style="width: 18px; height: 18px;"></i>
+                    Session Actions
+                </h3>
+                <ul>
+                    <li><strong>Open:</strong> Opens the session in the same tab</li>
+                    <li><strong>New Tab:</strong> Opens the session in a new browser tab</li>
+                    <li><strong>Copy Link:</strong> Copies the shareable session URL to clipboard</li>
+                    <li><strong>Delete/Close:</strong> Removes or terminates the session</li>
+                </ul>
+            </div>
+
+            <div class="help-section">
+                <h3>
+                    <i data-lucide="check-square" style="width: 18px; height: 18px;"></i>
+                    Bulk Operations
+                </h3>
+                <p>
+                    Select multiple sessions using the checkboxes to perform batch operations:
+                </p>
+                <ul>
+                    <li><strong>Select All:</strong> Quickly select all sessions in a section</li>
+                    <li><strong>Delete Selected:</strong> Remove multiple sessions at once</li>
+                    <li>Bulk actions appear after selecting one or more sessions</li>
+                </ul>
+            </div>
+
+            <div class="help-section">
+                <h3>
+                    <i data-lucide="settings" style="width: 18px; height: 18px;"></i>
+                    Tips & Tricks
+                </h3>
+                <ul>
+                    <li>Sessions are automatically saved and persist across server restarts</li>
+                    <li>Use the "New" button in the header to create a fresh terminal session</li>
+                    <li>Session URLs remain valid and can be bookmarked</li>
+                    <li>Active sessions show in real-time with WebSocket connections</li>
+                    <li>The monitor automatically refreshes session data</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -11,6 +11,7 @@ const TerminalManager = require('./TerminalManager');
 // Import orchestrator components
 const PortMonitor = require('./orchestrator/PortMonitor');
 const ProcessTracker = require('./orchestrator/ProcessTracker');
+const { spawn } = require('child_process');
 
 const app = express();
 const httpServer = createServer(app);
@@ -236,24 +237,82 @@ setTimeout(() => {
 // Get all discovered ports
 app.get('/api/ports', (req, res) => {
   const ports = portMonitor.getKnownPorts();
+  const sessionPid = req.query.sessionPid; // Optional: filter by terminal session PID
 
-  // Add both proxy and direct URLs
-  const result = ports.map(port => {
-    return {
-      ...port,
-      hasProxy: true,
-      proxyUrl: `http://localhost:${PORT}/proxy/${port.port}/`,
-      directUrl: `http://localhost:${port.port}`,
-      routeName: `port-${port.port}`
-    };
-  });
-  
+  // Filter out ports above 9000 and add proxy/direct URLs
+  let result = ports
+    .filter(port => port.port <= 9000)
+    .map(port => {
+      return {
+        ...port,
+        hasProxy: true,
+        proxyUrl: `http://localhost:${PORT}/proxy/${port.port}/`,
+        directUrl: `http://localhost:${port.port}`,
+        routeName: `port-${port.port}`
+      };
+    });
+
+  // If sessionPid provided, filter to only show ports from that session's child processes
+  if (sessionPid) {
+    result = result.filter(port => isChildProcess(port.pid, sessionPid));
+  }
+
   res.json({
     success: true,
     ports: result,
     stats: portMonitor.getStats()
   });
 });
+
+// Cache for PID relationships (expires after 5 seconds)
+const pidCache = new Map();
+const CACHE_TTL = 5000;
+
+// Helper function to check if a PID is a child of another PID
+function isChildProcess(childPid, parentPid) {
+  const cacheKey = `${childPid}:${parentPid}`;
+  const cached = pidCache.get(cacheKey);
+
+  // Return cached result if still valid
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.result;
+  }
+
+  try {
+    const { execSync } = require('child_process');
+    let currentPid = childPid;
+    const maxDepth = 10;
+
+    for (let i = 0; i < maxDepth; i++) {
+      if (currentPid == parentPid) {
+        pidCache.set(cacheKey, { result: true, timestamp: Date.now() });
+        return true;
+      }
+
+      const result = execSync(`ps -o ppid= -p ${currentPid}`, { encoding: 'utf8' }).trim();
+      const ppid = parseInt(result);
+
+      if (!ppid || ppid <= 1) break;
+      currentPid = ppid;
+    }
+
+    pidCache.set(cacheKey, { result: false, timestamp: Date.now() });
+    return false;
+  } catch (error) {
+    pidCache.set(cacheKey, { result: false, timestamp: Date.now() });
+    return false;
+  }
+}
+
+// Clean up old cache entries periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of pidCache.entries()) {
+    if (now - value.timestamp > CACHE_TTL) {
+      pidCache.delete(key);
+    }
+  }
+}, 10000); // Clean every 10 seconds
 
 // Get process information
 app.get('/api/process/:pid', async (req, res) => {
@@ -346,7 +405,7 @@ app.delete('/api/proxy/:port', (req, res) => {
 // Toggle port monitoring
 app.post('/api/monitor/:action', (req, res) => {
   const action = req.params.action;
-  
+
   if (action === 'start') {
     portMonitor.startMonitoring();
     res.json({ success: true, message: 'Monitoring started' });
@@ -356,6 +415,151 @@ app.post('/api/monitor/:action', (req, res) => {
   } else {
     res.status(400).json({ success: false, error: 'Invalid action' });
   }
+});
+
+// Active tunnels storage
+const activeTunnels = new Map();
+
+// Create cloudflared tunnel for a port
+app.post('/api/tunnel/create', async (req, res) => {
+  try {
+    const { port } = req.body;
+
+    if (!port) {
+      return res.status(400).json({
+        success: false,
+        error: 'Port is required'
+      });
+    }
+
+    // Check if tunnel already exists for this port
+    if (activeTunnels.has(port)) {
+      const existing = activeTunnels.get(port);
+      return res.json({
+        success: true,
+        url: existing.url,
+        port: port,
+        cached: true
+      });
+    }
+
+    // Spawn cloudflared process
+    const cloudflared = spawn('cloudflared', ['tunnel', '--url', `http://localhost:${port}`]);
+
+    let output = '';
+    let urlFound = false;
+    const tunnelData = {
+      process: cloudflared,
+      url: null,
+      port: port,
+      created: Date.now()
+    };
+
+    // Set up promise to capture URL
+    const urlPromise = new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Timeout waiting for tunnel URL'));
+      }, 30000); // 30 second timeout
+
+      // Check both stdout and stderr for the URL
+      const checkForUrl = (data) => {
+        const text = data.toString();
+        output += text;
+
+        // Look for the URL in the output
+        const urlMatch = text.match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/);
+        if (urlMatch && !urlFound) {
+          urlFound = true;
+          clearTimeout(timeout);
+          tunnelData.url = urlMatch[0];
+          activeTunnels.set(port, tunnelData);
+          console.log(`✅ Tunnel created for port ${port}: ${urlMatch[0]}`);
+          resolve(urlMatch[0]);
+        }
+      };
+
+      cloudflared.stdout.on('data', checkForUrl);
+      cloudflared.stderr.on('data', checkForUrl);
+
+      cloudflared.on('error', (error) => {
+        clearTimeout(timeout);
+        reject(error);
+      });
+
+      cloudflared.on('close', (code) => {
+        if (!urlFound) {
+          clearTimeout(timeout);
+          reject(new Error(`Cloudflared exited with code ${code}`));
+        }
+        activeTunnels.delete(port);
+      });
+    });
+
+    // Wait for URL
+    const tunnelUrl = await urlPromise;
+
+    res.json({
+      success: true,
+      url: tunnelUrl,
+      port: port
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Stop cloudflared tunnel for a port
+app.post('/api/tunnel/stop', (req, res) => {
+  try {
+    const { port } = req.body;
+
+    if (!port) {
+      return res.status(400).json({
+        success: false,
+        error: 'Port is required'
+      });
+    }
+
+    const tunnel = activeTunnels.get(port);
+    if (!tunnel) {
+      return res.status(404).json({
+        success: false,
+        error: 'No tunnel found for this port'
+      });
+    }
+
+    // Kill the cloudflared process
+    tunnel.process.kill();
+    activeTunnels.delete(port);
+
+    res.json({
+      success: true,
+      message: 'Tunnel stopped'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Get all active tunnels
+app.get('/api/tunnels', (req, res) => {
+  const tunnels = Array.from(activeTunnels.entries()).map(([port, data]) => ({
+    port: port,
+    url: data.url,
+    created: data.created
+  }));
+
+  res.json({
+    success: true,
+    tunnels: tunnels
+  });
 });
 
 // Initialize Socket.io with optimizations
@@ -404,11 +608,16 @@ io.on('connection', (socket) => {
       const host = socket.handshake.headers.host || 'localhost:5000';
       const baseUrl = `${protocol}://${host}`;
       
-      socket.emit('terminal:created', { 
-        sessionId, 
+      // Get PTY PID for port monitoring
+      const session = terminalManager.sessions.get(sessionId);
+      const pid = session?.ptyService?.pid;
+
+      socket.emit('terminal:created', {
+        sessionId,
         shareId,
         url: `${baseUrl}/terminal/${shareId}`,
-        persistent: true
+        persistent: true,
+        pid: pid
       });
     } catch (error) {
       socket.emit('terminal:error', { 
@@ -444,11 +653,16 @@ io.on('connection', (socket) => {
       const host = socket.handshake.headers.host || 'localhost:5000';
       const baseUrl = `${protocol}://${host}`;
       
+      // Get PTY PID for port monitoring
+      const session = terminalManager.sessions.get(savedSession.sessionId);
+      const pid = session?.ptyService?.pid;
+
       socket.emit('terminal:connected', {
         sessionId: savedSession.sessionId,
         shareId,
         name: savedSession.name,
-        url: `${baseUrl}/terminal/${shareId}`
+        url: `${baseUrl}/terminal/${shareId}`,
+        pid: pid
       });
     } else {
       // Recreate session with same ID
@@ -471,12 +685,17 @@ io.on('connection', (socket) => {
         const host = socket.handshake.headers.host || 'localhost:5000';
         const baseUrl = `${protocol}://${host}`;
         
+        // Get PTY PID for port monitoring
+        const session = terminalManager.sessions.get(sessionId);
+        const pid = session?.ptyService?.pid;
+
         socket.emit('terminal:connected', {
           sessionId,
           shareId,
           name: savedSession.name,
           url: `${baseUrl}/terminal/${shareId}`,
-          recreated: true
+          recreated: true,
+          pid: pid
         });
       } catch (error) {
         socket.emit('terminal:error', {
@@ -571,6 +790,32 @@ setInterval(async () => {
   }
   await saveSessions(persistentSessions);
 }, 10000); // Save every 10 seconds
+
+// Cleanup all tunnels on exit
+process.on('SIGINT', () => {
+  console.log('\n🛑 Shutting down...');
+
+  // Kill all cloudflared processes
+  activeTunnels.forEach((tunnel, port) => {
+    console.log(`Stopping tunnel for port ${port}`);
+    tunnel.process.kill();
+  });
+
+  activeTunnels.clear();
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  console.log('\n🛑 Shutting down...');
+
+  activeTunnels.forEach((tunnel, port) => {
+    console.log(`Stopping tunnel for port ${port}`);
+    tunnel.process.kill();
+  });
+
+  activeTunnels.clear();
+  process.exit(0);
+});
 
 // Start server with Caddy or fallback to direct
 const PORT = 5000; // Direct access on port 5000

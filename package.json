@@ -1,7 +1,7 @@
 {
   "name": "web-terminal-server",
-  "version": "1.4.0",
-  "description": "Professional web-based terminal server with persistent sessions, live sharing, port monitoring, and full CLI support",
+  "version": "1.5.0",
+  "description": "Professional web-based terminal server with persistent sessions, live sharing, smart port detection, Cloudflare tunnels, and full CLI support",
   "main": "src/server.js",
   "bin": {
     "web-terminal-server": "./bin/cli.js",
@@ -23,6 +23,10 @@
     "terminal-sharing",
     "port-monitoring",
     "port-scanner",
+    "cloudflare-tunnel",
+    "cloudflared",
+    "public-urls",
+    "ngrok-alternative",
     "dev-tools",
     "cli-tools",
     "codex",

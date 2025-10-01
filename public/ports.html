@@ -278,20 +278,24 @@
         }
 
         .port-actions {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 8px;
             margin-top: 12px;
         }
 
+        .port-actions .btn-full {
+            grid-column: 1 / -1;
+        }
+
         .btn {
-            padding: 10px 16px;
+            padding: 8px 14px;
             border: 1px solid var(--border-light);
-            border-radius: 10px;
-            font-size: 0.9em;
+            border-radius: 8px;
+            font-size: 0.85em;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            flex: 1;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             text-align: center;
             text-decoration: none;
             display: inline-flex;
@@ -300,24 +304,11 @@
             gap: 6px;
             position: relative;
             overflow: hidden;
+            white-space: nowrap;
         }
 
-        .btn::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: var(--gradient-accent);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .btn:hover::before {
-            opacity: 1;
-        }
-
-        .btn span, .btn i {
-            position: relative;
-            z-index: 1;
+        .btn:active {
+            transform: scale(0.98);
         }
 
         .btn-primary {
@@ -327,8 +318,8 @@
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(10, 132, 255, 0.4);
+            box-shadow: 0 4px 16px rgba(10, 132, 255, 0.3);
+            transform: translateY(-1px);
         }
 
         .btn-secondary {
@@ -337,9 +328,129 @@
         }
 
         .btn-secondary:hover {
-            background: var(--secondary-bg);
-            border-color: var(--accent-primary);
+            border-color: var(--border-medium);
             color: var(--text-primary);
+        }
+
+        .btn-tunnel {
+            background: var(--tertiary-bg);
+            color: var(--accent-warning);
+            border-color: rgba(255, 159, 10, 0.3);
+        }
+
+        .btn-tunnel:hover {
+            background: rgba(255, 159, 10, 0.1);
+            border-color: var(--accent-warning);
+            color: var(--accent-warning);
+        }
+
+        .btn-tunnel.active {
+            background: rgba(255, 69, 58, 0.15);
+            color: var(--accent-danger);
+            border-color: rgba(255, 69, 58, 0.3);
+        }
+
+        .btn-tunnel.active:hover {
+            background: rgba(255, 69, 58, 0.2);
+            border-color: var(--accent-danger);
+        }
+
+        .btn-tunnel.loading {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .btn-tunnel.loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        @keyframes spin {
+            to { transform: translateY(-50%) rotate(360deg); }
+        }
+
+        @keyframes rotate {
+            to { transform: rotate(360deg); }
+        }
+
+        [data-lucide="loader"] {
+            animation: rotate 1s linear infinite;
+        }
+
+        .tunnel-url {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            background: rgba(50, 215, 75, 0.08);
+            border: 1px solid rgba(50, 215, 75, 0.2);
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.8em;
+            word-break: break-all;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+                max-height: 0;
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+                max-height: 100px;
+            }
+        }
+
+        .tunnel-url-icon {
+            color: var(--accent-success);
+            flex-shrink: 0;
+        }
+
+        .tunnel-url a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            flex: 1;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .tunnel-url a:hover {
+            color: var(--text-primary);
+        }
+
+        .tunnel-url button {
+            padding: 6px 12px;
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.75em;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .tunnel-url button:hover {
+            background: var(--secondary-bg);
+            border-color: var(--accent-success);
+            color: var(--accent-success);
+        }
+
+        .tunnel-url button:active {
+            transform: scale(0.95);
         }
 
         .framework-badge {
@@ -491,9 +602,184 @@
             background-color: white;
         }
 
+        .help-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .help-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .help-content {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .help-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .help-header h2 {
+            font-size: 24px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .help-close {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .help-close:hover {
+            background: var(--secondary-bg);
+            border-color: var(--accent-danger);
+            color: var(--accent-danger);
+        }
+
+        .help-section {
+            margin-bottom: 24px;
+        }
+
+        .help-section h3 {
+            font-size: 18px;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .help-section p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .help-section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .help-section li {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            padding-left: 24px;
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .help-section li::before {
+            content: '→';
+            position: absolute;
+            left: 8px;
+            color: var(--accent-primary);
+        }
+
+        .help-code {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.9em;
+            color: var(--accent-primary);
+            margin: 12px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .help-code button {
+            padding: 6px 12px;
+            background: var(--accent-primary);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.8em;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .help-code button:hover {
+            background: var(--accent-secondary);
+        }
+
+        .help-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: rgba(10, 132, 255, 0.15);
+            border: 1px solid rgba(10, 132, 255, 0.3);
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--accent-primary);
+            margin-left: 8px;
+        }
+
         @media (max-width: 768px) {
             .main-content {
                 grid-template-columns: 1fr;
+            }
+
+            .help-content {
+                padding: 24px;
+                max-height: 95vh;
             }
         }
     </style>
@@ -506,6 +792,10 @@
                 Port Monitor
             </h1>
             <div style="display: flex; align-items: center; gap: 12px;">
+                <button class="btn btn-secondary" onclick="showHelp()" style="display: flex; align-items: center; gap: 6px;">
+                    <i data-lucide="help-circle" style="width: 14px; height: 14px;"></i>
+                    Help
+                </button>
                 <button class="btn btn-secondary" onclick="window.location.href='/'" style="display: flex; align-items: center; gap: 6px;">
                     <i data-lucide="terminal" style="width: 14px; height: 14px;"></i>
                     Terminal
@@ -582,6 +872,93 @@
         </div>
     </div>
 
+    <!-- Help Modal -->
+    <div class="help-modal" id="helpModal" onclick="closeHelp(event)">
+        <div class="help-content" onclick="event.stopPropagation()">
+            <div class="help-header">
+                <h2>
+                    <i data-lucide="info" style="width: 24px; height: 24px;"></i>
+                    Port Monitor Help
+                </h2>
+                <button class="help-close" onclick="closeHelp()">
+                    <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+                </button>
+            </div>
+
+            <div class="help-section">
+                <h3>
+                    <i data-lucide="radar" style="width: 18px; height: 18px;"></i>
+                    What is Port Monitor?
+                </h3>
+                <p>
+                    Port Monitor automatically discovers and tracks all local servers running on your machine.
+                    It scans ports 1-9000 and displays active applications with their details.
+                </p>
+            </div>
+
+            <div class="help-section">
+                <h3>
+                    <i data-lucide="zap" style="width: 18px; height: 18px;"></i>
+                    Features
+                </h3>
+                <ul>
+                    <li><strong>Auto-Discovery:</strong> Automatically detects new ports as they open</li>
+                    <li><strong>Quick Access:</strong> One-click links to open applications in browser</li>
+                    <li><strong>Directory Navigation:</strong> Copy cd command to navigate to app directory</li>
+                    <li><strong>Public Tunnels:</strong> Create cloudflared tunnels to share your local apps</li>
+                    <li><strong>Real-time Updates:</strong> Live monitoring with WebSocket connections</li>
+                </ul>
+            </div>
+
+            <div class="help-section">
+                <h3>
+                    <i data-lucide="globe" style="width: 18px; height: 18px;"></i>
+                    Cloudflare Tunnels <span class="help-badge">New</span>
+                </h3>
+                <p>
+                    Create secure public URLs for your local applications instantly using Cloudflare Tunnel.
+                    Perfect for sharing work with clients or testing on mobile devices.
+                </p>
+                <p><strong>Installation:</strong></p>
+                <div class="help-code">
+                    <span>brew install cloudflared</span>
+                    <button onclick="copyInstallCommand()">Copy</button>
+                </div>
+                <p>
+                    Once installed, click the "Create Tunnel" button on any port to generate a public URL.
+                    The tunnel runs until you stop it or close the server.
+                </p>
+            </div>
+
+            <div class="help-section">
+                <h3>
+                    <i data-lucide="terminal" style="width: 18px; height: 18px;"></i>
+                    Button Actions
+                </h3>
+                <ul>
+                    <li><strong>Open:</strong> Opens the application in a new browser tab</li>
+                    <li><strong>Copy cd:</strong> Copies the cd command to navigate to the app's directory</li>
+                    <li><strong>Create Tunnel:</strong> Generates a public URL using Cloudflare Tunnel</li>
+                    <li><strong>Stop Tunnel:</strong> Terminates the active tunnel for this port</li>
+                </ul>
+            </div>
+
+            <div class="help-section">
+                <h3>
+                    <i data-lucide="settings" style="width: 18px; height: 18px;"></i>
+                    Tips & Tricks
+                </h3>
+                <ul>
+                    <li>The monitor updates every 5 seconds automatically</li>
+                    <li>Toggle monitoring on/off using the switch in the header</li>
+                    <li>Ports above 9000 are filtered out to reduce noise</li>
+                    <li>Tunnel URLs are cached - creating the same tunnel again returns the existing URL</li>
+                    <li>All tunnels are automatically closed when the server shuts down</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script>
         // Detect if using ngrok (WebSocket won't work on free tier)
@@ -589,13 +966,18 @@
         let socket = null;
         let ports = [];
         let isMonitoring = true;
+        let tunnels = {}; // Store tunnel URLs per port
 
         // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             // Initialize Lucide icons
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
             }
+
+            // Load existing tunnels first
+            await loadTunnels();
+
             loadPorts();
 
             if (!isNgrok) {
@@ -668,36 +1050,99 @@
 
         function renderPorts() {
             const grid = document.getElementById('portGrid');
-            
+
             if (ports.length === 0) {
-                grid.innerHTML = `
-                    <div class="no-ports">
-                        <div class="no-ports-icon">🔍</div>
-                        <div>No open ports detected</div>
-                        <div style="color: #9ca3af; font-size: 0.9em; margin-top: 10px;">
-                            Run any application that opens a port
+                const noPortsDiv = grid.querySelector('.no-ports');
+                if (!noPortsDiv) {
+                    grid.innerHTML = `
+                        <div class="no-ports">
+                            <div class="no-ports-icon">
+                                <i data-lucide="search" style="width: 48px; height: 48px;"></i>
+                            </div>
+                            <div>No open ports detected</div>
+                            <div style="color: var(--text-tertiary); font-size: 0.9em; margin-top: 10px;">
+                                Run any application that opens a port
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                }
                 return;
             }
 
-            grid.innerHTML = ports.map(port => `
-                <div class="port-card">
+            // Remove no-ports message if exists
+            const noPortsDiv = grid.querySelector('.no-ports');
+            if (noPortsDiv) {
+                noPortsDiv.remove();
+            }
+
+            // Update existing cards or create new ones to prevent flicker
+            const existingPorts = new Set();
+
+            ports.forEach(port => {
+                existingPorts.add(port.port);
+                const hasTunnel = tunnels[port.port];
+                let card = document.getElementById(`port-${port.port}`);
+
+                if (!card) {
+                    // Create new card
+                    card = document.createElement('div');
+                    card.className = 'port-card';
+                    card.id = `port-${port.port}`;
+                    grid.appendChild(card);
+                }
+
+                // Update card content
+                card.innerHTML = `
                     <div class="port-header">
                         <div class="port-number">Port ${port.port}</div>
                         <div class="process-name">${port.processName || 'unknown'}</div>
                     </div>
                     <div class="port-actions">
                         <a href="http://localhost:${port.port}" target="_blank" class="btn btn-primary" title="Open in browser">
-                            🔗 Open
+                            <i data-lucide="external-link" style="width: 14px; height: 14px;"></i>
+                            Open
                         </a>
                         <button class="btn btn-secondary" onclick="copyCd(${port.port})" title="Copy cd command">
-                            📁 Copy cd
+                            <i data-lucide="folder" style="width: 14px; height: 14px;"></i>
+                            Copy cd
+                        </button>
+                        <button class="btn btn-tunnel ${hasTunnel ? 'active' : ''} btn-full"
+                                onclick="createTunnel(${port.port})"
+                                id="tunnel-btn-${port.port}"
+                                title="${hasTunnel ? 'Stop Tunnel' : 'Create public tunnel'}">
+                            <i data-lucide="${hasTunnel ? 'x-circle' : 'globe'}" style="width: 14px; height: 14px;"></i>
+                            ${hasTunnel ? 'Stop Tunnel' : 'Create Tunnel'}
                         </button>
                     </div>
-                </div>
-            `).join('');
+                    ${hasTunnel ? `
+                        <div class="tunnel-url" id="tunnel-url-${port.port}">
+                            <i data-lucide="check-circle" style="width: 16px; height: 16px;" class="tunnel-url-icon"></i>
+                            <a href="${hasTunnel}" target="_blank">${hasTunnel}</a>
+                            <button onclick="copyTunnelUrl('${hasTunnel}')">
+                                <i data-lucide="copy" style="width: 12px; height: 12px;"></i>
+                                Copy
+                            </button>
+                        </div>
+                    ` : ''}
+                `;
+            });
+
+            // Remove cards for ports that no longer exist
+            const allCards = grid.querySelectorAll('.port-card');
+            allCards.forEach(card => {
+                const portNum = parseInt(card.id.replace('port-', ''));
+                if (!existingPorts.has(portNum)) {
+                    card.remove();
+                }
+            });
+
+            // Re-initialize Lucide icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
         }
 
         function updateStats(stats) {
@@ -714,8 +1159,8 @@
         }
 
         async function copyCd(port) {
-            const btn = event.target;
-            const originalText = btn.innerHTML;
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
 
             try {
                 // Get process info for this port
@@ -741,17 +1186,43 @@
 
                 await navigator.clipboard.writeText(cdCommand);
 
-                btn.innerHTML = '✅ Copied!';
-                btn.style.background = '#10b981';
+                btn.innerHTML = '<i data-lucide="check" style="width: 14px; height: 14px;"></i> Copied!';
+                btn.style.background = 'var(--accent-success)';
+                btn.style.borderColor = 'var(--accent-success)';
+                btn.style.color = 'white';
+
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+
                 setTimeout(() => {
-                    btn.innerHTML = originalText;
+                    btn.innerHTML = originalHTML;
                     btn.style.background = '';
+                    btn.style.borderColor = '';
+                    btn.style.color = '';
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
                 }, 2000);
             } catch (err) {
                 console.error('Failed to copy:', err);
-                btn.innerHTML = '❌ Failed';
+                btn.innerHTML = '<i data-lucide="x" style="width: 14px; height: 14px;"></i> Failed';
+                btn.style.background = 'var(--accent-danger)';
+                btn.style.borderColor = 'var(--accent-danger)';
+                btn.style.color = 'white';
+
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+
                 setTimeout(() => {
-                    btn.innerHTML = originalText;
+                    btn.innerHTML = originalHTML;
+                    btn.style.background = '';
+                    btn.style.borderColor = '';
+                    btn.style.color = '';
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
                 }, 2000);
             }
         }
@@ -808,6 +1279,196 @@
         function refreshPorts() {
             loadPorts();
         }
+
+        async function createTunnel(port) {
+            const btn = document.getElementById(`tunnel-btn-${port}`);
+            const card = document.getElementById(`port-${port}`);
+
+            // If tunnel exists, stop it
+            if (tunnels[port]) {
+                try {
+                    btn.classList.add('loading');
+                    btn.disabled = true;
+
+                    const response = await fetch('/api/tunnel/stop', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ port })
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        delete tunnels[port];
+
+                        // Update only this card
+                        const tunnelUrlDiv = card.querySelector('.tunnel-url');
+                        if (tunnelUrlDiv) {
+                            tunnelUrlDiv.remove();
+                        }
+
+                        btn.className = 'btn btn-tunnel btn-full';
+                        btn.innerHTML = `<i data-lucide="globe" style="width: 14px; height: 14px;"></i> Create Tunnel`;
+                        btn.title = 'Create public tunnel';
+
+                        if (typeof lucide !== 'undefined') {
+                            lucide.createIcons();
+                        }
+                    } else {
+                        alert(`Failed to stop tunnel: ${data.error}`);
+                    }
+                } catch (error) {
+                    console.error('Failed to stop tunnel:', error);
+                    alert('Failed to stop tunnel');
+                } finally {
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                }
+                return;
+            }
+
+            // Create new tunnel
+            try {
+                btn.classList.add('loading');
+                btn.disabled = true;
+                btn.innerHTML = '<i data-lucide="loader" style="width: 14px; height: 14px; animation: spin 1s linear infinite;"></i> Creating...';
+
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+
+                const response = await fetch('/api/tunnel/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ port })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    tunnels[port] = data.url;
+
+                    // Update button
+                    btn.className = 'btn btn-tunnel active btn-full';
+                    btn.innerHTML = `<i data-lucide="x-circle" style="width: 14px; height: 14px;"></i> Stop Tunnel`;
+                    btn.title = 'Stop Tunnel';
+
+                    // Add tunnel URL display
+                    const actionsDiv = card.querySelector('.port-actions');
+                    const tunnelUrlHTML = `
+                        <div class="tunnel-url" id="tunnel-url-${port}">
+                            <i data-lucide="check-circle" style="width: 16px; height: 16px;" class="tunnel-url-icon"></i>
+                            <a href="${data.url}" target="_blank">${data.url}</a>
+                            <button onclick="copyTunnelUrl('${data.url}')">
+                                <i data-lucide="copy" style="width: 12px; height: 12px;"></i>
+                                Copy
+                            </button>
+                        </div>
+                    `;
+                    actionsDiv.insertAdjacentHTML('afterend', tunnelUrlHTML);
+
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                } else {
+                    alert(`Failed to create tunnel: ${data.error}`);
+                    btn.innerHTML = '<i data-lucide="globe" style="width: 14px; height: 14px;"></i> Create Tunnel';
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to create tunnel:', error);
+                alert('Failed to create tunnel. Make sure cloudflared is installed.');
+                btn.innerHTML = '<i data-lucide="globe" style="width: 14px; height: 14px;"></i> Create Tunnel';
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        function copyTunnelUrl(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                const btn = event.target.closest('button');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i data-lucide="check" style="width: 12px; height: 12px;"></i> Copied!';
+                btn.style.background = 'var(--accent-success)';
+                btn.style.borderColor = 'var(--accent-success)';
+                btn.style.color = 'white';
+
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.style.background = '';
+                    btn.style.borderColor = '';
+                    btn.style.color = '';
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                }, 1500);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy URL');
+            });
+        }
+
+        // Load existing tunnels on startup
+        async function loadTunnels() {
+            try {
+                const response = await fetch('/api/tunnels');
+                const data = await response.json();
+                if (data.success) {
+                    data.tunnels.forEach(tunnel => {
+                        tunnels[tunnel.port] = tunnel.url;
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load tunnels:', error);
+            }
+        }
+
+        // Help modal functions
+        function showHelp() {
+            const modal = document.getElementById('helpModal');
+            modal.classList.add('show');
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        function closeHelp(event) {
+            if (!event || event.target.id === 'helpModal') {
+                const modal = document.getElementById('helpModal');
+                modal.classList.remove('show');
+            }
+        }
+
+        function copyInstallCommand() {
+            const command = 'brew install cloudflared';
+            navigator.clipboard.writeText(command).then(() => {
+                const btn = event.target;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = 'Copied!';
+                btn.style.background = 'var(--accent-success)';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = '';
+                }, 1500);
+            }).catch(err => {
+                alert('Failed to copy command');
+            });
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeHelp();
+            }
+        });
 
         // Auto-refresh every 5 seconds
         setInterval(() => {

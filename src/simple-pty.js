@@ -31,7 +31,10 @@ class SimplePTYService extends EventEmitter {
         PATH: process.env.PATH
       }
     });
-    
+
+    // Store PID for port monitoring
+    this.pid = this.ptyProcess.pid;
+
     // Simply forward data without any buffering
     this.ptyProcess.onData((data) => {
       this.emit('data', { 

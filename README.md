@@ -11,15 +11,18 @@
 - 🔄 **Persistent Sessions** - Terminal processes keep running even when disconnected
 - 🔗 **Live Sharing** - Share terminal sessions with unique URLs
 - 💾 **Session History** - Full output history preserved across reconnections
-- 🔍 **Port Monitoring** - Automatic detection of open ports with direct links
+- 🔍 **Smart Port Detection** - Automatic discovery of ports opened from your terminal
+- 🌐 **Cloudflare Tunnels** - One-click public URLs with cloudflared integration
+- 🚀 **Live Port Notifications** - Pop-up alerts when new ports are detected in terminal
+- 📡 **Live Button** - Quick access to active tunnel URLs directly in terminal header
 - 📁 **Quick Navigation** - Copy `cd` commands to process directories
 - 🎮 **Mobile Support** - Touch-friendly controls for mobile devices
 - 🔒 **Security Levels** - Configurable access control (full/limited/restricted)
-- 🌐 **Ngrok Support** - Built-in support for public tunneling
 - 📊 **Session Monitor** - Real-time monitoring with bulk management
 - ✅ **Batch Operations** - Select and delete multiple sessions at once
-- ⚡ **Zero Delay** - Optimized for real-time performance
-- 🎨 **Professional UI** - GitHub-inspired dark theme with smooth animations
+- ⚡ **Optimized Performance** - Smart caching and efficient port tracking
+- 🎨 **Modern UI** - Consistent design with glass-morphism effects and smooth animations
+- 📱 **Help Modals** - Built-in interactive guides for all features
 
 ## 🚀 Quick Start
 
@@ -160,21 +163,55 @@ Access these pages while the server is running:
 - **`/ports`** - Port monitoring page with open ports list
 - **`/monitor`** - Session monitoring dashboard
 
-## 🔍 Port Monitoring
+## 🔍 Smart Port Detection & Cloudflare Tunnels
 
-The `/ports` page automatically detects open ports on your system and provides:
+### Automatic Port Discovery
+
+The `/ports` page automatically detects open ports (1-9000) on your system and provides:
 
 - **Port Number** - The port where the service is running
 - **Process Name** - Name of the process using the port
 - **🔗 Open Button** - Direct link to `http://localhost:PORT`
 - **📁 Copy cd Button** - Copies `cd` command to process working directory
+- **🌐 Create Tunnel** - One-click Cloudflare tunnel creation for public access
+
+### Live Port Notifications (New! 🎉)
+
+When you run a server in the terminal, a beautiful notification pops up:
+
+1. **Automatic Detection** - Detects when ports are opened from your terminal session
+2. **Smart Filtering** - Only shows ports from YOUR terminal (not system ports)
+3. **One-Click Tunnels** - Create public URLs instantly with Cloudflare
+4. **Live Button** - Active tunnel shows in terminal header with port number
+5. **Works Everywhere** - Functions in normal, shared, and connected sessions
+
+### Cloudflare Tunnel Setup
+
+Install cloudflared to enable public tunnels:
+
+```bash
+# macOS
+brew install cloudflared
+
+# Linux
+wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+sudo mv cloudflared-linux-amd64 /usr/local/bin/cloudflared
+sudo chmod +x /usr/local/bin/cloudflared
+```
+
+Once installed:
+- Click "Create Tunnel" on any port
+- Get instant public URL (e.g., `https://abc-xyz-123.trycloudflare.com`)
+- Share with anyone, anywhere
+- Click "LIVE :8080" button in terminal header to open
 
 ### Example Use Cases:
 
-- Monitor dev servers (React, Vue, Angular on port 3000, 5173, etc.)
-- Check API servers (Express, FastAPI on port 8000, 4000, etc.)
-- Track database ports (PostgreSQL 5432, MongoDB 27017, etc.)
-- Quick access to any local service
+- Share local dev server with clients instantly
+- Test mobile apps against local backend
+- Demo work-in-progress without deployment
+- Remote debugging with team members
+- Quick API endpoint sharing
 
 ## 🎯 Use Cases
 

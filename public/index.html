@@ -257,8 +257,44 @@
 
         .terminal-status {
             display: flex;
-            gap: 6px;
+            gap: 12px;
             align-items: center;
+        }
+
+        .live-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(255, 69, 58, 0.15);
+            border: 1px solid rgba(255, 69, 58, 0.3);
+            border-radius: 8px;
+            color: var(--accent-danger);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 0.5px;
+        }
+
+        .live-btn:hover {
+            background: rgba(255, 69, 58, 0.25);
+            border-color: var(--accent-danger);
+            transform: translateY(-1px);
+        }
+
+        .live-indicator {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-danger);
+            border-radius: 50%;
+            animation: livePulse 1.5s ease-in-out infinite;
+            box-shadow: 0 0 8px var(--accent-danger);
+        }
+
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.9); }
         }
 
         .status-dot {
@@ -1149,6 +1185,192 @@
             }
         }
 
+        /* Port Discovery Notification Modal */
+        .port-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--border-light);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 480px;
+            width: 90%;
+            box-shadow: var(--shadow-xl);
+            z-index: 2000;
+            animation: modalFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .port-notification-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1999;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -48%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        .port-notification-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .port-notification-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--gradient-accent);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .port-notification-icon::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            background: var(--gradient-accent);
+            border-radius: 18px;
+            opacity: 0.3;
+            filter: blur(12px);
+            z-index: -1;
+            animation: glowPulse 3s ease-in-out infinite;
+        }
+
+        .port-notification-title {
+            flex: 1;
+        }
+
+        .port-notification-title h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .port-notification-title p {
+            font-size: 14px;
+            color: var(--text-tertiary);
+            font-weight: 500;
+        }
+
+        .port-info-card {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .port-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .port-info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .port-info-label {
+            font-size: 13px;
+            color: var(--text-tertiary);
+            font-weight: 600;
+        }
+
+        .port-info-value {
+            font-size: 15px;
+            color: var(--text-primary);
+            font-weight: 700;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .port-notification-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .port-notification-btn {
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .port-notification-btn-primary {
+            background: var(--gradient-accent);
+            color: white;
+        }
+
+        .port-notification-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(10, 132, 255, 0.4);
+        }
+
+        .port-notification-btn-secondary {
+            background: var(--tertiary-bg);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-light);
+        }
+
+        .port-notification-btn-secondary:hover {
+            background: var(--secondary-bg);
+            border-color: var(--border-medium);
+            color: var(--text-primary);
+        }
+
+        .port-notification-btn:active {
+            transform: scale(0.98);
+        }
+
+        .port-notification-btn.loading {
+            pointer-events: none;
+            opacity: 0.7;
+            position: relative;
+        }
+
+        .port-notification-btn.loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         /* Loading - Premium Experience */
         .loading {
             position: fixed;
@@ -1505,6 +1727,11 @@
                         <span class="terminal-info">Connected</span>
                     </div>
                     <div class="terminal-status">
+                        <button class="live-btn" id="liveBtn" style="display: none;" onclick="openLiveUrl()">
+                            <div class="live-indicator"></div>
+                            <span>LIVE</span>
+                            <span id="livePort"></span>
+                        </button>
                         <span class="terminal-info" id="terminalSize">--x--</span>
                     </div>
                 </div>
@@ -1961,6 +2188,10 @@
                 if (data.shareId) {
                     terminal.writeln(`\x1b[36m🔗 Share: ${data.shareId}\x1b[0m\n`);
                 }
+                // Start port monitoring
+                if (data.pid) {
+                    onTerminalCreated(data);
+                }
             });
 
             socket.on('terminal:connected', (data) => {
@@ -1974,6 +2205,10 @@
                     terminal.writeln(`\x1b[33m⚠ Session was inactive, recreated\x1b[0m`);
                 }
                 terminal.writeln('');
+                // Start port monitoring for shared/connected sessions
+                if (data.pid) {
+                    onTerminalCreated(data);
+                }
             });
             
             socket.on('terminal:history', (data) => {
@@ -1998,6 +2233,7 @@
 
             socket.on('disconnect', () => {
                 terminal.writeln(`\n\x1b[31m✗ Connection lost\x1b[0m`);
+                stopPortMonitoring(); // Stop monitoring on disconnect
             });
 
             // Terminal input
@@ -2646,19 +2882,24 @@
         // Show existing sessions dialog
         async function showExistingSessions() {
             showToast('Connect feature temporarily disabled');
-        }
+            return; // Exit early - feature disabled
+
+            // Code below is disabled but kept for reference
+            try {
+                const ttyResponse = await fetch('/api/ttys');
+                const tmuxResponse = await fetch('/api/tmux/sessions');
 
                 const ttyData = await ttyResponse.json();
                 const tmuxData = await tmuxResponse.json();
 
                 let html = '<div style="max-height: 400px; overflow-y: auto;">';
-                
+
                 // Show TTYs
                 if (ttyData.success && ttyData.ttys.length > 0) {
                     html += '<h3>System Terminals (TTYs)</h3>';
                     html += '<table style="width: 100%; border-collapse: collapse;">';
                     html += '<tr><th>User</th><th>TTY</th><th>Process</th><th>Action</th></tr>';
-                    
+
                     ttyData.ttys.forEach(tty => {
                         html += '<tr>';
                         html += `<td>${tty.user}</td>`;
@@ -2682,7 +2923,7 @@
                     html += '<h3 style="margin-top: 20px;">Tmux Sessions</h3>';
                     html += '<table style="width: 100%; border-collapse: collapse;">';
                     html += '<tr><th>Name</th><th>Windows</th><th>Attached</th><th>Action</th></tr>';
-                    
+
                     tmuxData.sessions.forEach(session => {
                         html += '<tr>';
                         html += `<td>${session.name}</td>`;
@@ -2707,7 +2948,7 @@
                 // Show in a dialog
                 const dialog = document.createElement('div');
                 dialog.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; padding: 20px; border: 1px solid #444; border-radius: 8px; z-index: 10000; max-width: 600px; width: 90%; color: #fff;';
-                dialog.innerHTML = '<h2 style="margin-top: 0;">Connect to Existing Session</h2>' + html + 
+                dialog.innerHTML = '<h2 style="margin-top: 0;">Connect to Existing Session</h2>' + html +
                     '<button onclick="this.parentElement.remove()" style="margin-top: 10px; padding: 5px 15px; background: #007aff; color: white; border: none; border-radius: 4px; cursor: pointer;">Close</button>';
                 document.body.appendChild(dialog);
             } catch (error) {
@@ -2948,16 +3189,39 @@
             // Create xterm with mobile-optimized settings
             terminal = new Terminal({
                 cursorBlink: true,
-                fontSize: isMobile ? 14 : 14,
-                fontFamily: '"Cascadia Code", "Courier New", monospace',
+                fontSize: isMobile ? 15 : 16,
+                fontFamily: '"JetBrains Mono", "Fira Code", "SF Mono", "Consolas", "Monaco", "Menlo", monospace',
+                fontWeight: '400',
+                fontWeightBold: '700',
+                letterSpacing: 0,
                 theme: {
-                    background: '#000814',
-                    foreground: '#e0e0e0',
-                    cursor: '#00ff88'
+                    background: '#000000',
+                    foreground: '#E4E4E7',
+                    cursor: '#0A84FF',
+                    cursorAccent: '#000000',
+                    selectionBackground: 'rgba(10, 132, 255, 0.3)',
+                    selectionForeground: '#FFFFFF',
+                    black: '#27272A',
+                    red: '#FF6B6B',
+                    green: '#51CF66',
+                    yellow: '#FFD93D',
+                    blue: '#0A84FF',
+                    magenta: '#A78BFA',
+                    cyan: '#22D3EE',
+                    white: '#F4F4F5',
+                    brightBlack: '#52525B',
+                    brightRed: '#FFA8A8',
+                    brightGreen: '#8CE99A',
+                    brightYellow: '#FFE066',
+                    brightBlue: '#74C0FC',
+                    brightMagenta: '#C4B5FD',
+                    brightCyan: '#67E8F9',
+                    brightWhite: '#FAFAFA'
                 },
-                scrollback: 5000,
+                scrollback: 10000,
                 convertEol: true,
-                lineHeight: isMobile ? 1.2 : 1.0
+                lineHeight: 1.2,
+                allowProposedApi: true
             });
 
             // Add fit addon
@@ -3033,6 +3297,10 @@
                     terminal.writeln(`\x1b[33m⚠ Session was inactive, recreated\x1b[0m`);
                 }
                 terminal.writeln('');
+                // Start port monitoring for shared/connected sessions
+                if (data.pid) {
+                    onTerminalCreated(data);
+                }
             });
             
             socket.on('terminal:history', (data) => {
@@ -3050,6 +3318,10 @@
                 terminal.writeln(`\x1b[32m✓ New Terminal Created\x1b[0m`);
                 if (data.shareId) {
                     terminal.writeln(`\x1b[36m🔗 Share: ${data.shareId}\x1b[0m\n`);
+                }
+                // Start port monitoring
+                if (data.pid) {
+                    onTerminalCreated(data);
                 }
             });
 
@@ -3072,6 +3344,7 @@
 
             socket.on('disconnect', () => {
                 terminal.writeln(`\n\x1b[31m✗ Connection lost\x1b[0m`);
+                stopPortMonitoring(); // Stop monitoring on disconnect
             });
 
             socket.on('reconnect', () => {
@@ -3201,6 +3474,175 @@
                 loadSessionsList();
             }
         });
+
+        // Port monitoring for terminal session
+        let terminalPid = null;
+        let discoveredPorts = new Set();
+        let activeTunnelPort = null;
+        let activeTunnelUrl = null;
+        let portMonitoringInterval = null;
+
+        // Start monitoring ports from this terminal session
+        function startPortMonitoring() {
+            if (!terminalPid) return;
+
+            // Prevent multiple intervals
+            if (portMonitoringInterval) {
+                clearInterval(portMonitoringInterval);
+            }
+
+            portMonitoringInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/ports?sessionPid=${terminalPid}`);
+                    const data = await response.json();
+
+                    if (data.success && data.ports.length > 0) {
+                        data.ports.forEach(portInfo => {
+                            if (!discoveredPorts.has(portInfo.port)) {
+                                discoveredPorts.add(portInfo.port);
+                                showPortNotification(portInfo);
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.error('Port monitoring error:', error);
+                }
+            }, 3000); // Check every 3 seconds
+        }
+
+        // Stop monitoring (cleanup)
+        function stopPortMonitoring() {
+            if (portMonitoringInterval) {
+                clearInterval(portMonitoringInterval);
+                portMonitoringInterval = null;
+            }
+        }
+
+        // Show port discovery notification
+        function showPortNotification(portInfo) {
+            // Create overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'port-notification-overlay';
+            overlay.onclick = () => closePortNotification();
+
+            // Create notification modal
+            const notification = document.createElement('div');
+            notification.className = 'port-notification';
+            notification.innerHTML = `
+                <div class="port-notification-header">
+                    <div class="port-notification-icon">
+                        <i data-lucide="server" style="width: 28px; height: 28px; color: white;"></i>
+                    </div>
+                    <div class="port-notification-title">
+                        <h3>New Port Detected!</h3>
+                        <p>Would you like to expose it publicly?</p>
+                    </div>
+                </div>
+                <div class="port-info-card">
+                    <div class="port-info-row">
+                        <span class="port-info-label">Port</span>
+                        <span class="port-info-value">:${portInfo.port}</span>
+                    </div>
+                    <div class="port-info-row">
+                        <span class="port-info-label">Process</span>
+                        <span class="port-info-value">${portInfo.processName || 'unknown'}</span>
+                    </div>
+                    <div class="port-info-row">
+                        <span class="port-info-label">Local URL</span>
+                        <span class="port-info-value" style="font-size: 13px;">localhost:${portInfo.port}</span>
+                    </div>
+                </div>
+                <div class="port-notification-actions">
+                    <button class="port-notification-btn port-notification-btn-secondary" onclick="closePortNotification()">
+                        <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                        Not Now
+                    </button>
+                    <button class="port-notification-btn port-notification-btn-primary" onclick="createTunnelFromNotification(${portInfo.port})">
+                        <i data-lucide="globe" style="width: 16px; height: 16px;"></i>
+                        Create Tunnel
+                    </button>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+            document.body.appendChild(notification);
+
+            // Initialize icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        // Close port notification
+        function closePortNotification() {
+            const overlay = document.querySelector('.port-notification-overlay');
+            const notification = document.querySelector('.port-notification');
+            if (overlay) overlay.remove();
+            if (notification) notification.remove();
+        }
+
+        // Create tunnel from notification
+        async function createTunnelFromNotification(port) {
+            const btn = event.target;
+            btn.classList.add('loading');
+            btn.innerHTML = '<span>Creating...</span>';
+
+            try {
+                const response = await fetch('/api/tunnel/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ port })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    activeTunnelPort = port;
+                    activeTunnelUrl = data.url;
+
+                    // Show Live button
+                    const liveBtn = document.getElementById('liveBtn');
+                    const livePort = document.getElementById('livePort');
+                    if (liveBtn && livePort) {
+                        livePort.textContent = `:${port}`;
+                        liveBtn.style.display = 'flex';
+                    }
+
+                    closePortNotification();
+                    showToast(`Tunnel created! ${data.url}`);
+                } else {
+                    showToast('Failed to create tunnel: ' + data.error);
+                    btn.classList.remove('loading');
+                    btn.innerHTML = '<i data-lucide="globe" style="width: 16px; height: 16px;"></i> Create Tunnel';
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                }
+            } catch (error) {
+                console.error('Tunnel creation error:', error);
+                showToast('Failed to create tunnel');
+                btn.classList.remove('loading');
+                btn.innerHTML = '<i data-lucide="globe" style="width: 16px; height: 16px;"></i> Create Tunnel';
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        // Open live URL
+        function openLiveUrl() {
+            if (activeTunnelUrl) {
+                window.open(activeTunnelUrl, '_blank');
+            }
+        }
+
+        // Extract PID from terminal created event and start monitoring
+        // This will be called when terminal is created
+        function onTerminalCreated(data) {
+            if (data.pid) {
+                terminalPid = data.pid;
+                startPortMonitoring();
+            }
+        }
     </script>
 </body>
 </html>

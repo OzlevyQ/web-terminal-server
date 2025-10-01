@@ -2,26 +2,162 @@
 <html lang="he" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shared Terminal Session</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Loading Terminal Session...</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary-bg: #000000;
+            --secondary-bg: #1C1C1E;
+            --accent-primary: #0A84FF;
+            --accent-secondary: #5E5CE6;
+            --text-primary: #FFFFFF;
+            --text-secondary: #EBEBF5;
+            --gradient-accent: linear-gradient(135deg, #0A84FF 0%, #5E5CE6 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 40px 20px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .loader-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient-accent);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            position: relative;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .loader-icon::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            background: var(--gradient-accent);
+            border-radius: 22px;
+            opacity: 0.3;
+            filter: blur(12px);
+            z-index: -1;
+            animation: glowPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+
+        .loader-text {
+            font-size: 24px;
+            font-weight: 700;
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+        }
+
+        .loader-sub {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-top: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            color: #FF453A;
+            background: rgba(255, 69, 58, 0.1);
+            border: 1px solid rgba(255, 69, 58, 0.3);
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 20px;
+            max-width: 400px;
+        }
+    </style>
     <script>
-        // Redirect to terminal-grid.html with the shareId
         window.addEventListener('DOMContentLoaded', () => {
             const pathParts = window.location.pathname.split('/');
             const shareId = pathParts[pathParts.length - 1];
-            
+
             if (shareId) {
-                // Redirect to index.html with the shareId
-                window.location.href = `/index.html?share=${shareId}`;
+                setTimeout(() => {
+                    window.location.href = `/?share=${shareId}`;
+                }, 500);
             } else {
-                document.body.innerHTML = '<div style="padding: 20px; color: red;">Error: No share ID provided</div>';
+                document.querySelector('.loader-icon').innerHTML = '<i data-lucide="alert-circle" style="width: 40px; height: 40px; color: white;"></i>';
+                document.querySelector('.loader-text').textContent = 'Error';
+                document.querySelector('.loader-sub').textContent = 'No session ID provided';
+                document.querySelector('.spinner').style.display = 'none';
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
             }
         });
     </script>
 </head>
 <body>
-    <div style="padding: 20px; text-align: center;">
-        <h2>Loading shared terminal...</h2>
+    <div class="loader-container">
+        <div class="loader-icon">
+            <i data-lucide="terminal" style="width: 40px; height: 40px; color: white;"></i>
+        </div>
+        <div class="loader-text">Loading Terminal</div>
+        <div class="loader-sub">Connecting to shared session...</div>
+        <div class="spinner"></div>
     </div>
+    <script>
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    </script>
 </body>
 </html>
