@@ -13,7 +13,8 @@ const TmuxManager = require('./TmuxManager');
 // Import orchestrator components
 const PortMonitor = require('./orchestrator/PortMonitor');
 const ProcessTracker = require('./orchestrator/ProcessTracker');
-const AutoProxy = require('./orchestrator/AutoProxy');
+// PerfectProxy imported above
+const CaddyIntegration = require('./orchestrator/CaddyIntegration');
 
 const app = express();
 const httpServer = createServer(app);
@@ -25,7 +26,8 @@ app.set('trust proxy', true);
 app.use(cors(config.server.cors));
 app.use(compression());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '..', 'public')));
+
+
 
 // Create data directory if it doesn't exist
 const dataDir = path.join(__dirname, '..', 'data');
@@ -152,11 +154,6 @@ app.get('/terminal/:shareId', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'shared.html'));
 });
 
-// Serve main terminal interface
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
-});
-
 // Serve monitor interface
 app.get('/monitor', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'monitor.html'));
@@ -167,6 +164,30 @@ app.get('/ports', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'ports.html'));
 });
 
+// Static files for non-proxy paths
+app.use(express.static(path.join(__dirname, '..', 'public')));
+
+// Serve main terminal interface ONLY for root path
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
+});
+
+// 404 handler for /auto/* paths that don't have a proxy
+app.use('/auto/*', (req, res) => {
+  // Use proxyInstance which is defined early
+  const proxies = proxyInstance ? proxyInstance.getProxies() : [];
+  
+  res.status(404).json({
+    error: 'Proxy route not found',
+    path: req.path,
+    message: 'No proxy configured for this path. Available proxies:',
+    proxies: proxies.map(p => ({
+      name: p.routeName,
+      url: p.baseUrl
+    }))
+  });
+});
+
 // TTY and Tmux API endpoints
 const ttyReader = new TTYReader();
 const tmuxManager = new TmuxManager();
@@ -174,12 +195,24 @@ const tmuxManager = new TmuxManager();
 // Initialize Orchestrator components
 const portMonitor = new PortMonitor({ scanInterval: 3000 }); // Scan every 3 seconds
 const processTracker = new ProcessTracker();
-const autoProxy = new AutoProxy(app, { basePath: '/auto' });
 
-// Start port monitoring
+// Try to use Caddy first, fallback to Node.js proxy
+const caddyIntegration = new CaddyIntegration({
+  publicPort: config.server.port,
+  terminalPort: config.server.port + 1, // Terminal runs on next port
+  adminPort: 2019
+});
+
+// Start port monitoring - no proxy, just discovery
 portMonitor.on('port:discovered', async (portInfo) => {
   console.log(`🔍 New port discovered: ${portInfo.port} (${portInfo.processName})`);
-  
+
+  // Skip the server's own port and nginx
+  if (portInfo.port === PORT || portInfo.port === 5000) {
+    console.log(`⏭️  Skipping port ${portInfo.port} (system port)`);
+    return;
+  }
+
   // Get detailed process info
   const processInfo = await processTracker.getProcessInfo(portInfo.pid);
   if (processInfo) {
@@ -187,21 +220,21 @@ portMonitor.on('port:discovered', async (portInfo) => {
     portInfo.appType = processInfo.appType;
     portInfo.cwd = processInfo.cwd;
   }
-  
-  // Create proxy automatically
-  const proxy = autoProxy.createProxy(portInfo);
-  
+
+  // Direct URL only
+  const directUrl = `http://localhost:${portInfo.port}`;
+
+  console.log(`✅ Port ${portInfo.port}: ${directUrl}`);
+
   // Emit to all connected clients
   io.emit('port:discovered', {
     ...portInfo,
-    proxyUrl: proxy.baseUrl,
-    routeName: proxy.routeName
+    directUrl
   });
 });
 
-portMonitor.on('port:closed', (portInfo) => {
+portMonitor.on('port:closed', async (portInfo) => {
   console.log(`🔒 Port closed: ${portInfo.port}`);
-  autoProxy.removeProxy(portInfo.port);
   io.emit('port:closed', { port: portInfo.port });
 });
 
@@ -270,21 +303,21 @@ app.post('/api/tmux/create', (req, res) => {
   }
 });
 
+
 // Orchestrator API endpoints
 
 // Get all discovered ports
 app.get('/api/ports', (req, res) => {
   const ports = portMonitor.getKnownPorts();
-  const proxies = autoProxy.getProxies();
-  
-  // Merge port and proxy info
+
+  // Add both proxy and direct URLs
   const result = ports.map(port => {
-    const proxy = proxies.find(p => p.port === port.port);
     return {
       ...port,
-      hasProxy: !!proxy,
-      proxyUrl: proxy ? proxy.baseUrl : null,
-      routeName: proxy ? proxy.routeName : null
+      hasProxy: true,
+      proxyUrl: `http://localhost:${PORT}/proxy/${port.port}/`,
+      directUrl: `http://localhost:${port.port}`,
+      routeName: `port-${port.port}`
     };
   });
   
@@ -322,10 +355,13 @@ app.get('/api/process/:pid', async (req, res) => {
 
 // Get proxy information
 app.get('/api/proxies', (req, res) => {
-  const stats = autoProxy.getStats();
+  // With DockerPortRouter, proxies are dynamic via ?port= parameter
+  // Return empty list for backward compatibility
   res.json({
     success: true,
-    ...stats
+    total: 0,
+    proxies: [],
+    message: 'Using dynamic port routing via ?port= parameter'
   });
 });
 
@@ -692,24 +728,49 @@ setInterval(async () => {
   await saveSessions(persistentSessions);
 }, 10000); // Save every 10 seconds
 
-// Start server - listen on all interfaces for ngrok
-const PORT = config.server.port;
+// Start server with Caddy or fallback to direct
+const PORT = 5000; // Direct access on port 5000
 const HOST = '0.0.0.0'; // Listen on all interfaces
-httpServer.listen(PORT, HOST, () => {
+
+// Setup proxy BEFORE static files
+(async () => {
+  // DISABLE CADDY - USE NODE.JS PROXY ONLY
+  const caddyStarted = false;
+  
+  if (caddyStarted) {
+    useCaddy = true;
+    console.log('✅ Using Caddy for proxying');
+    
+    // Terminal server runs on next port when using Caddy
+    const TERMINAL_PORT = PORT + 1;
+    httpServer.listen(TERMINAL_PORT, HOST, () => {
+      console.log(`🚀 Terminal server (backend) on port ${TERMINAL_PORT}`);
+      console.log(`🌐 Caddy proxy server on port ${PORT}`);
+    });
+  } else {
+    useCaddy = false;
+
+    // Run server directly
+    httpServer.listen(PORT, HOST, async () => {
   const securityConfig = require('./security-config');
   const secConfig = securityConfig.getCurrentConfig();
-  
-  console.log(`🚀 Terminal server running on ${HOST}:${PORT}`);
+
+  console.log(`🚀 Terminal server on ${HOST}:${PORT}`);
   console.log(`📁 Starting directory: ${config.terminal.cwd}`);
   console.log(`🔒 Security level: ${secConfig.level.toUpperCase()}`);
   console.log(`📊 Max buffer size: ${config.performance.maxBufferSize / 1024 / 1024}MB`);
   console.log(`📦 Chunk size: ${config.performance.chunkSize / 1024}KB`);
-  console.log(`🔗 Share URLs: http://localhost:${PORT}/terminal/[shareId]`);
-  console.log(`🌐 For ngrok: ngrok http ${PORT}`);
-  
+  console.log(``);
+  console.log(`🌐 Access:`);
+  console.log(`   Dashboard: http://localhost:${PORT}`);
+  console.log(`   Ports:     http://localhost:${PORT}/ports`);
+  console.log(``);
+
   if (secConfig.level === 'full') {
     console.log(`⚠️  FULL SYSTEM ACCESS ENABLED - cd / should work`);
   } else {
     console.log(`🛡️  Security restrictions active - limited access`);
   }
-});
+    });
+  }
+})();

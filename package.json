@@ -1,7 +1,7 @@
 {
   "name": "web-terminal-server",
-  "version": "1.2.0",
-  "description": "Professional web-based terminal server with persistent sessions, live sharing, and full CLI support",
+  "version": "1.3.0",
+  "description": "Professional web-based terminal server with persistent sessions, live sharing, port monitoring, and full CLI support",
   "main": "src/server.js",
   "bin": {
     "web-terminal-server": "./bin/cli.js",
@@ -21,10 +21,15 @@
     "remote-terminal",
     "persistent-sessions",
     "terminal-sharing",
+    "port-monitoring",
+    "port-scanner",
+    "dev-tools",
     "cli-tools",
     "codex",
     "claude-code",
-    "ai-cli"
+    "ai-cli",
+    "developer-tools",
+    "localhost"
   ],
   "author": "Web Terminal Server Contributors",
   "license": "MIT",
@@ -41,6 +46,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "http-proxy": "^1.18.1",
     "http-proxy-middleware": "^3.0.5",
     "node-pty": "^1.0.0",
     "socket.io": "^4.7.2",

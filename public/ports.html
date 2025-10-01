@@ -2,40 +2,119 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Port Monitor - Auto Discovery</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#667eea">
+    <title>Port Monitor - Terminal Grid</title>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
+        :root {
+            /* Modern App Color Palette - Same as Terminal Grid */
+            --primary-bg: #000000;
+            --secondary-bg: #1C1C1E;
+            --tertiary-bg: #2C2C2E;
+            --card-bg: #1C1C1E;
+
+            /* Vibrant Accent Colors */
+            --accent-primary: #0A84FF;
+            --accent-secondary: #5E5CE6;
+            --accent-success: #32D74B;
+            --accent-warning: #FF9F0A;
+            --accent-danger: #FF453A;
+
+            /* Gradients */
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-accent: linear-gradient(135deg, #0A84FF 0%, #5E5CE6 100%);
+            --gradient-dark: linear-gradient(180deg, #1C1C1E 0%, #000000 100%);
+
+            /* Text Colors */
+            --text-primary: #FFFFFF;
+            --text-secondary: #EBEBF5;
+            --text-tertiary: #98989D;
+            --text-muted: #636366;
+
+            /* Border & Divider */
+            --border-light: rgba(255, 255, 255, 0.1);
+            --border-medium: rgba(255, 255, 255, 0.15);
+            --border-strong: rgba(255, 255, 255, 0.2);
+
+            /* Shadows */
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
+
+            /* Glass Effect */
+            --glass-bg: rgba(28, 28, 30, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        html, body {
+            height: 100vh;
+            height: 100dvh;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+
+        /* Safe area support */
+        @supports (padding: env(safe-area-inset-top)) {
+            .container {
+                padding-top: max(16px, env(safe-area-inset-top));
+                padding-bottom: max(80px, env(safe-area-inset-bottom));
+                padding-left: max(16px, env(safe-area-inset-left));
+                padding-right: max(16px, env(safe-area-inset-right));
+            }
         }
 
         .header {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 12px;
-            padding: 20px 30px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 20px 24px;
             margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-lg);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
         .header h1 {
-            color: #333;
+            color: var(--text-primary);
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -52,29 +131,37 @@
             align-items: center;
             gap: 8px;
             padding: 8px 16px;
-            background: #f0f0f0;
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-light);
             border-radius: 20px;
+        }
+
+        .status-indicator span {
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
         }
 
         .status-dot {
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            animation: pulse 2s infinite;
+            animation: pulse 2s ease-in-out infinite;
         }
 
         .status-dot.active {
-            background: #10b981;
+            background: var(--accent-success);
+            box-shadow: 0 0 12px var(--accent-success);
         }
 
         .status-dot.inactive {
-            background: #ef4444;
+            background: var(--accent-danger);
             animation: none;
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.95); }
         }
 
         .main-content {
@@ -84,10 +171,11 @@
         }
 
         .ports-section, .stats-section {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 12px;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
             padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-md);
         }
 
         .section-header {
@@ -101,8 +189,9 @@
 
         .section-title {
             font-size: 1.2em;
-            color: #333;
-            font-weight: 600;
+            color: var(--text-primary);
+            font-weight: 700;
+            letter-spacing: -0.3px;
         }
 
         .port-grid {
@@ -111,11 +200,11 @@
         }
 
         .port-card {
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 15px;
-            transition: all 0.3s ease;
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             animation: slideIn 0.3s ease;
         }
 
@@ -132,51 +221,60 @@
 
         .port-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: var(--accent-primary);
+            box-shadow: 0 8px 24px rgba(10, 132, 255, 0.2);
         }
 
         .port-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .port-number {
-            font-size: 1.4em;
-            font-weight: bold;
-            color: #667eea;
+            font-size: 1.5em;
+            font-weight: 700;
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .process-name {
-            background: #f3f4f6;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.9em;
-            color: #4b5563;
+            background: var(--accent-primary);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            color: white;
+            font-weight: 600;
         }
 
         .port-details {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 12px;
+            margin-bottom: 12px;
             font-size: 0.9em;
         }
 
         .detail-item {
             display: flex;
             flex-direction: column;
+            gap: 4px;
         }
 
         .detail-label {
-            color: #9ca3af;
-            font-size: 0.85em;
+            color: var(--text-tertiary);
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .detail-value {
-            color: #374151;
-            font-weight: 500;
+            color: var(--text-secondary);
+            font-weight: 600;
         }
 
         .port-actions {
@@ -186,34 +284,62 @@
         }
 
         .btn {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 6px;
+            padding: 10px 16px;
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
             font-size: 0.9em;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             flex: 1;
             text-align: center;
             text-decoration: none;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--gradient-accent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .btn:hover::before {
+            opacity: 1;
+        }
+
+        .btn span, .btn i {
+            position: relative;
+            z-index: 1;
         }
 
         .btn-primary {
-            background: #667eea;
+            background: var(--gradient-accent);
             color: white;
+            border-color: transparent;
         }
 
         .btn-primary:hover {
-            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(10, 132, 255, 0.4);
         }
 
         .btn-secondary {
-            background: #e5e7eb;
-            color: #374151;
+            background: var(--tertiary-bg);
+            color: var(--text-secondary);
         }
 
         .btn-secondary:hover {
-            background: #d1d5db;
+            background: var(--secondary-bg);
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
         }
 
         .framework-badge {
@@ -237,56 +363,84 @@
         }
 
         .stat-card {
-            background: #f9fafb;
-            padding: 15px;
-            border-radius: 8px;
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-light);
+            padding: 16px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
         }
 
         .stat-value {
-            font-size: 2em;
-            font-weight: bold;
-            color: #667eea;
+            font-size: 2.2em;
+            font-weight: 700;
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .stat-label {
-            color: #6b7280;
-            margin-top: 5px;
+            color: var(--text-tertiary);
+            margin-top: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .manual-proxy {
             margin-top: 20px;
             padding-top: 20px;
-            border-top: 2px solid #e5e7eb;
+            border-top: 1px solid var(--border-light);
         }
 
         .form-group {
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
         .form-group label {
             display: block;
-            color: #374151;
-            margin-bottom: 4px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
             font-size: 0.9em;
+            font-weight: 600;
         }
 
         .form-group input {
             width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
+            padding: 12px 14px;
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
             font-size: 0.95em;
+            background: var(--tertiary-bg);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-muted);
         }
 
         .no-ports {
             text-align: center;
-            padding: 40px;
-            color: #9ca3af;
+            padding: 60px 20px;
+            color: var(--text-tertiary);
         }
 
         .no-ports-icon {
-            font-size: 3em;
-            margin-bottom: 10px;
+            margin-bottom: 16px;
+            opacity: 0.6;
         }
 
         .toggle-switch {
@@ -308,9 +462,10 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
+            background-color: var(--tertiary-bg);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border-radius: 24px;
+            border: 1px solid var(--border-light);
         }
 
         .slider:before {
@@ -320,17 +475,20 @@
             width: 18px;
             left: 3px;
             bottom: 3px;
-            background-color: white;
-            transition: .4s;
+            background-color: var(--text-muted);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         input:checked + .slider {
-            background-color: #667eea;
+            background: var(--gradient-accent);
+            border-color: transparent;
         }
 
         input:checked + .slider:before {
             transform: translateX(26px);
+            background-color: white;
         }
 
         @media (max-width: 768px) {
@@ -344,7 +502,7 @@
     <div class="container">
         <div class="header">
             <h1>
-                <span>🔍</span>
+                <i data-lucide="radar" style="width: 24px; height: 24px; margin-right: 8px;"></i>
                 Port Monitor
             </h1>
             <div class="status">
@@ -363,11 +521,16 @@
             <div class="ports-section">
                 <div class="section-header">
                     <div class="section-title">Discovered Ports</div>
-                    <button class="btn btn-secondary" onclick="refreshPorts()">↻ Refresh</button>
+                    <button class="btn btn-secondary" onclick="refreshPorts()">
+                        <i data-lucide="refresh-cw" style="width: 14px; height: 14px; margin-right: 4px;"></i>
+                        Refresh
+                    </button>
                 </div>
                 <div class="port-grid" id="portGrid">
                     <div class="no-ports">
-                        <div class="no-ports-icon">🔍</div>
+                        <div class="no-ports-icon">
+                            <i data-lucide="search" style="width: 48px; height: 48px;"></i>
+                        </div>
                         <div>Scanning for open ports...</div>
                         <div style="color: #9ca3af; font-size: 0.9em; margin-top: 10px;">
                             Run any application that opens a port
@@ -411,18 +574,36 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        // Detect if using ngrok (WebSocket won't work on free tier)
+        const isNgrok = window.location.hostname.includes('ngrok');
+        let socket = null;
         let ports = [];
         let isMonitoring = true;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Lucide icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
             loadPorts();
-            setupSocketListeners();
+
+            if (!isNgrok) {
+                // Only use Socket.IO on localhost
+                socket = io();
+                setupSocketListeners();
+            } else {
+                // Fallback to polling for ngrok
+                setInterval(loadPorts, 3000);
+                console.log('🌐 Using HTTP polling (ngrok detected)');
+            }
+
             setupMonitorToggle();
         });
 
         function setupSocketListeners() {
+            if (!socket) return;
+
             socket.on('port:discovered', (portInfo) => {
                 console.log('New port discovered:', portInfo);
                 loadPorts();
@@ -494,37 +675,16 @@
             grid.innerHTML = ports.map(port => `
                 <div class="port-card">
                     <div class="port-header">
-                        <div class="port-number">:${port.port}</div>
+                        <div class="port-number">Port ${port.port}</div>
                         <div class="process-name">${port.processName || 'unknown'}</div>
                     </div>
-                    <div class="port-details">
-                        <div class="detail-item">
-                            <div class="detail-label">Type</div>
-                            <div class="detail-value">
-                                ${port.framework && port.framework !== 'unknown' ? 
-                                    `<span class="framework-badge framework-${port.framework}">${port.framework}</span>` : 
-                                    port.appType || 'unknown'}
-                            </div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Protocol</div>
-                            <div class="detail-value">${port.protocol || 'tcp'}</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">PID</div>
-                            <div class="detail-value">${port.pid || 'N/A'}</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Address</div>
-                            <div class="detail-value">${port.address || 'localhost'}</div>
-                        </div>
-                    </div>
                     <div class="port-actions">
-                        ${port.hasProxy ? 
-                            `<a href="${port.proxyUrl}" target="_blank" class="btn btn-primary">Open Proxy</a>` :
-                            `<button class="btn btn-secondary" onclick="createProxyForPort(${port.port})">Create Proxy</button>`
-                        }
-                        <a href="http://localhost:${port.port}" target="_blank" class="btn btn-secondary">Direct Link</a>
+                        <a href="http://localhost:${port.port}" target="_blank" class="btn btn-primary" title="Open in browser">
+                            🔗 Open
+                        </a>
+                        <button class="btn btn-secondary" onclick="copyCd(${port.port})" title="Copy cd command">
+                            📁 Copy cd
+                        </button>
                     </div>
                 </div>
             `).join('');
@@ -543,24 +703,63 @@
                 });
         }
 
-        async function createProxyForPort(port) {
+        async function copyCd(port) {
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+
             try {
-                const response = await fetch('/api/proxy/create', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ port })
-                });
-                
+                // Get process info for this port
+                const response = await fetch(`/api/ports`);
                 const data = await response.json();
-                if (data.success) {
-                    alert(`Proxy created: ${data.proxy.baseUrl}`);
-                    loadPorts();
-                } else {
-                    alert(`Failed to create proxy: ${data.error}`);
+                const portInfo = data.ports.find(p => p.port === port);
+
+                if (!portInfo || !portInfo.pid) {
+                    throw new Error('Could not find process info');
                 }
-            } catch (error) {
-                alert('Failed to create proxy');
+
+                // Get cwd using lsof
+                const cwdResponse = await fetch(`/api/process/${portInfo.pid}`);
+                const processData = await cwdResponse.json();
+
+                let cdCommand;
+                if (processData.success && processData.process && processData.process.cwd) {
+                    cdCommand = `cd "${processData.process.cwd}"`;
+                } else {
+                    // Fallback - just copy port info
+                    cdCommand = `# Port ${port} - PID: ${portInfo.pid} (${portInfo.processName})`;
+                }
+
+                await navigator.clipboard.writeText(cdCommand);
+
+                btn.innerHTML = '✅ Copied!';
+                btn.style.background = '#10b981';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = '';
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy:', err);
+                btn.innerHTML = '❌ Failed';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
             }
+        }
+
+        function copyUrl(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                // Show temporary success message
+                const btn = event.target;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ Copied!';
+                btn.style.background = '#10b981';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = '';
+                }, 2000);
+            }).catch(err => {
+                alert('Failed to copy URL');
+            });
         }
 
         async function createManualProxy() {

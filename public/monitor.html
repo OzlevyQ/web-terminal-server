@@ -2,9 +2,14 @@
 <html lang="he" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sessions Monitor - Web Terminal Server</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2358A6FF'/><text x='50' y='65' text-anchor='middle' font-size='50' fill='%23ffffff'>📊</text></svg>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+    <title>Sessions Monitor - Terminal Grid</title>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230A84FF'/><circle cx='50' cy='35' r='8' fill='white'/><circle cx='35' cy='60' r='8' fill='white'/><circle cx='65' cy='60' r='8' fill='white'/><line x1='50' y1='43' x2='50' y2='60' stroke='white' stroke-width='3'/><line x1='50' y1='60' x2='35' y2='60' stroke='white' stroke-width='3'/><line x1='50' y1='60' x2='65' y2='60' stroke='white' stroke-width='3'/></svg>" />
     
     <style>
         :root {
@@ -27,17 +32,43 @@
             box-sizing: border-box;
         }
 
+        html, body {
+            height: 100vh;
+            height: 100dvh;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
             background: var(--primary-bg);
             color: var(--text-primary);
-            min-height: 100vh;
-            padding: 20px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+
+        /* Safe area support */
+        @supports (padding: env(safe-area-inset-top)) {
+            .container {
+                padding-top: max(16px, env(safe-area-inset-top));
+                padding-bottom: max(80px, env(safe-area-inset-bottom));
+                padding-left: max(16px, env(safe-area-inset-left));
+                padding-right: max(16px, env(safe-area-inset-right));
+            }
         }
 
         /* Header */
@@ -362,26 +393,190 @@
             font-size: 16px;
         }
 
-        /* Responsive */
+        /* Responsive - Mobile Optimizations */
         @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+
             .header {
                 flex-direction: column;
+                gap: 16px;
+                padding: 16px;
+            }
+
+            .header-title {
+                font-size: 20px;
+            }
+
+            .logo {
+                width: 32px;
+                height: 32px;
+                font-size: 18px;
+            }
+
+            .header > div:last-child {
+                flex-wrap: wrap;
+                justify-content: center;
+                width: 100%;
+            }
+
+            .refresh-btn {
+                flex: 1;
+                min-width: 100px;
+                min-height: 44px;
+                justify-content: center;
+            }
+
+            /* Stats grid - 2 columns on mobile */
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
                 gap: 12px;
+            }
+
+            .stat-card {
+                padding: 14px;
+            }
+
+            .stat-label {
+                font-size: 11px;
+            }
+
+            .stat-value {
+                font-size: 22px;
+            }
+
+            /* Server info */
+            .server-info {
+                padding: 14px;
+            }
+
+            .server-details {
+                grid-template-columns: 1fr;
+                gap: 8px;
+                font-size: 13px;
+            }
+
+            /* Sessions section */
+            .sessions-section {
+                padding: 14px;
+            }
+
+            .section-title {
+                font-size: 16px;
+            }
+
+            /* Session cards - stack on mobile */
+            .session-card {
+                grid-template-columns: auto 1fr;
+                gap: 12px;
+                padding: 14px;
+            }
+
+            .session-info {
+                gap: 6px;
+            }
+
+            .session-name {
+                font-size: 15px;
+            }
+
+            .session-details {
+                font-size: 11px;
+                gap: 10px;
+            }
+
+            .session-actions {
+                grid-column: span 2;
+                justify-content: flex-start;
+                gap: 6px;
+                margin-top: 8px;
+            }
+
+            /* Action buttons - larger touch targets */
+            .action-btn {
+                flex: 1;
+                min-height: 40px;
+                padding: 8px 14px;
+                font-size: 13px;
                 text-align: center;
+            }
+
+            /* Empty state */
+            .empty-state {
+                padding: 30px 20px;
+            }
+
+            .empty-icon {
+                font-size: 40px;
+            }
+
+            .empty-text {
+                font-size: 15px;
+            }
+        }
+
+        /* Extra small devices */
+        @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+
+            .header {
+                padding: 12px;
+            }
+
+            .header-title {
+                font-size: 18px;
             }
 
             .stats-grid {
                 grid-template-columns: 1fr;
             }
 
-            .session-card {
-                grid-template-columns: auto 1fr;
-                gap: 12px;
+            .stat-card {
+                padding: 12px;
             }
 
-            .session-actions {
-                grid-column: span 2;
-                justify-content: flex-end;
+            .refresh-btn {
+                min-width: 80px;
+                font-size: 12px;
+                padding: 6px 10px;
+            }
+
+            .refresh-btn span:last-child {
+                display: none;
+            }
+        }
+
+        /* Safe area support for notched devices */
+        @supports (padding: env(safe-area-inset-top)) {
+            body {
+                padding-top: max(20px, env(safe-area-inset-top));
+                padding-bottom: max(20px, env(safe-area-inset-bottom));
+                padding-left: max(20px, env(safe-area-inset-left));
+                padding-right: max(20px, env(safe-area-inset-right));
+            }
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Better touch feedback */
+        @media (hover: none) and (pointer: coarse) {
+            .session-card:active {
+                background: var(--secondary-bg);
+                transform: scale(0.98);
+            }
+
+            .action-btn:active {
+                transform: scale(0.95);
+            }
+
+            .refresh-btn:active {
+                transform: scale(0.95);
             }
         }
     </style>
@@ -391,20 +586,22 @@
         <!-- Header -->
         <div class="header">
             <div class="header-title">
-                <div class="logo">▦</div>
-                <span>Terminal Sessions Monitor</span>
+                <div class="logo">
+                    <i data-lucide="activity" style="width: 20px; height: 20px;"></i>
+                </div>
+                <span>Sessions Monitor</span>
             </div>
             <div style="display: flex; gap: 10px;">
                 <button class="refresh-btn" onclick="window.location.href='/'">
-                    <span>◈</span>
+                    <i data-lucide="home" style="width: 16px; height: 16px;"></i>
                     <span>Home</span>
                 </button>
                 <button class="refresh-btn" onclick="window.open('/', '_blank')">
-                    <span>+</span>
-                    <span>New Terminal</span>
+                    <i data-lucide="plus-circle" style="width: 16px; height: 16px;"></i>
+                    <span>New</span>
                 </button>
                 <button class="refresh-btn" onclick="fetchData()">
-                    <span>↻</span>
+                    <i data-lucide="refresh-cw" style="width: 16px; height: 16px;"></i>
                     <span>Refresh</span>
                 </button>
             </div>
@@ -586,9 +783,11 @@
                     </div>
                     <div class="session-actions">
                         <button class="action-btn" onclick="openSession('${session.id}')">
+                            <i data-lucide="external-link" style="width: 14px; height: 14px;"></i>
                             Open
                         </button>
                         <button class="action-btn danger" onclick="closeSession('${session.id}')">
+                            <i data-lucide="x-circle" style="width: 14px; height: 14px;"></i>
                             Close
                         </button>
                     </div>
@@ -605,11 +804,14 @@
             if (!sessions || sessions.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-icon">◉</div>
+                        <div class="empty-icon">
+                            <i data-lucide="inbox" style="width: 48px; height: 48px; stroke-width: 1.5;"></i>
+                        </div>
                         <div class="empty-text">No Saved Sessions</div>
                         <div class="empty-subtext">Sessions with share IDs will appear here</div>
                     </div>
                 `;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
                 return;
             }
             
@@ -635,12 +837,15 @@
                     </div>
                     <div class="session-actions">
                         <button class="action-btn" onclick="openSharedSession('${session.shareId}')">
+                            <i data-lucide="play" style="width: 14px; height: 14px;"></i>
                             Open
                         </button>
                         <button class="action-btn" onclick="copyShareUrl('${session.shareId}')">
-                            Copy URL
+                            <i data-lucide="link" style="width: 14px; height: 14px;"></i>
+                            Copy
                         </button>
                         <button class="action-btn danger" onclick="deleteSession('${session.shareId}')">
+                            <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                             Delete
                         </button>
                     </div>
@@ -648,6 +853,7 @@
             `).join('');
             
             container.innerHTML = `<div class="sessions-grid">${sessionsHTML}</div>`;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         // Show error message
@@ -655,10 +861,11 @@
             const container = document.getElementById('sessionsContainer');
             container.innerHTML = `
                 <div class="error-message">
-                    <span class="error-icon">⚠</span>
+                    <i data-lucide="alert-triangle" class="error-icon" style="width: 16px; height: 16px;"></i>
                     <span>${message}</span>
                 </div>
             `;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         // Format functions
@@ -776,6 +983,10 @@
 
         // Initialize
         window.addEventListener('DOMContentLoaded', () => {
+            // Initialize Lucide icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
             fetchData();
             startAutoRefresh();
         });

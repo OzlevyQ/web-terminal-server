@@ -4,15 +4,15 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/node/v/web-terminal-server.svg)](https://nodejs.org)
 
-> Professional web-based terminal server with persistent sessions, live sharing, and full CLI support. Perfect for AI CLI tools like Claude Code, Codex, and Gemini CLI.
-
-![Web Terminal Server Demo](https://via.placeholder.com/800x400/0D1117/58A6FF?text=Web+Terminal+Server)
+> Professional web-based terminal server with persistent sessions, live sharing, port monitoring, and full CLI support. Perfect for AI CLI tools like Claude Code, Codex, and Gemini CLI.
 
 ## ✨ Features
 
 - 🔄 **Persistent Sessions** - Terminal processes keep running even when disconnected
 - 🔗 **Live Sharing** - Share terminal sessions with unique URLs
 - 💾 **Session History** - Full output history preserved across reconnections
+- 🔍 **Port Monitoring** - Automatic detection of open ports with direct links
+- 📁 **Quick Navigation** - Copy `cd` commands to process directories
 - 🎮 **Mobile Support** - Touch-friendly controls for mobile devices
 - 🔒 **Security Levels** - Configurable access control (full/limited/restricted)
 - 🌐 **Ngrok Support** - Built-in support for public tunneling
@@ -41,6 +41,9 @@ npx web-terminal-server --ngrok
 
 # Set security level
 npx web-terminal-server --security limited
+
+# Don't open browser automatically
+npx web-terminal-server --no-browser
 ```
 
 ## 📦 Installation
@@ -50,6 +53,11 @@ npx web-terminal-server --security limited
 ```bash
 npm install -g web-terminal-server
 web-terminal-server
+```
+
+Or use the short alias:
+```bash
+wts
 ```
 
 ### Local Installation
@@ -77,17 +85,34 @@ Create a `.env` file in your project root:
 ```env
 # Server Configuration
 PORT=5000
+HOST=0.0.0.0
+
+# Security Settings
+# Options: full, limited, restricted
 TERMINAL_SECURITY=full
 
+# Session Management
+MAX_SESSIONS=10
+SESSION_TIMEOUT=3600000
+DETACHED_SESSION_TIMEOUT=86400000
+
 # External Access (Important for sharing!)
-BASE_URL=https://your-domain.com
+BASE_URL=http://localhost:5000
 
 # Ngrok (optional)
 NGROK_AUTH_TOKEN=your_auth_token_here
 
-# Session Settings
-MAX_SESSIONS=10
-SESSION_TIMEOUT=3600000
+# Terminal Configuration
+TERMINAL_SHELL=/bin/bash
+TERMINAL_COLS=80
+TERMINAL_ROWS=24
+
+# Performance
+MAX_BUFFER_SIZE=52428800
+CHUNK_SIZE=32768
+
+# Data Storage
+DATA_DIR=./data
 ```
 
 ### Security Levels
@@ -126,6 +151,30 @@ Copy the public URL (e.g., `https://abc123.ngrok.io`) and set it in your `.env`:
 BASE_URL=https://abc123.ngrok.io
 ```
 
+## 📊 Available Pages
+
+Access these pages while the server is running:
+
+- **`/`** - Main dashboard with web terminal
+- **`/ports`** - Port monitoring page with open ports list
+- **`/monitor`** - Session monitoring dashboard
+
+## 🔍 Port Monitoring
+
+The `/ports` page automatically detects open ports on your system and provides:
+
+- **Port Number** - The port where the service is running
+- **Process Name** - Name of the process using the port
+- **🔗 Open Button** - Direct link to `http://localhost:PORT`
+- **📁 Copy cd Button** - Copies `cd` command to process working directory
+
+### Example Use Cases:
+
+- Monitor dev servers (React, Vue, Angular on port 3000, 5173, etc.)
+- Check API servers (Express, FastAPI on port 8000, 4000, etc.)
+- Track database ports (PostgreSQL 5432, MongoDB 27017, etc.)
+- Quick access to any local service
+
 ## 🎯 Use Cases
 
 ### AI CLI Tools
@@ -140,6 +189,7 @@ Perfect for running interactive AI tools:
 - Live debugging sessions
 - Server monitoring
 - Build process watching
+- Port monitoring for multiple services
 
 ### Education
 - Live coding demonstrations
@@ -208,6 +258,11 @@ Access the monitor at `http://localhost:5000/monitor` to see:
 - Try the Keyboard button first
 - Ensure browser has input focus
 
+### Port monitoring shows no ports
+- Make sure you have other services running
+- `lsof` command must be available (macOS/Linux)
+- Check if ports are actually open: `lsof -i -P | grep LISTEN`
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
@@ -231,22 +286,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- 📧 Email: support@web-terminal-server.org
 - 🐛 Issues: [GitHub Issues](https://github.com/OzlevyQ/web-terminal-server/issues)
 - 💬 Discussions: [GitHub Discussions](https://github.com/OzlevyQ/web-terminal-server/discussions)
-
-## 🌟 Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=OzlevyQ/web-terminal-server&type=Date)](https://star-history.com/#OzlevyQ/web-terminal-server&Date)
 
 ---
 
 <p align="center">
   Made with ❤️ by developers, for developers
-</p>
-
-<p align="center">
-  <a href="https://github.com/OzlevyQ/web-terminal-server">
-    <img src="https://img.shields.io/github/stars/OzlevyQ/web-terminal-server?style=social" alt="GitHub stars">
-  </a>
 </p>

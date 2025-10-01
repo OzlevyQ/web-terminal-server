@@ -2,27 +2,61 @@
 <html lang="he" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
     <title>Terminal Grid - Professional Terminal Interface</title>
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2358A6FF'/><text x='50' y='65' text-anchor='middle' font-size='50' fill='%23ffffff'>⚡</text></svg>" />
+    <!-- Lucide Icons - Modern, Clean Icon Set -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Professional Monospace Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230A84FF'/><rect x='20' y='40' width='60' height='4' rx='2' fill='white'/><rect x='20' y='52' width='45' height='4' rx='2' fill='white'/><rect x='20' y='64' width='50' height='4' rx='2' fill='white'/></svg>" />
     
     <style>
         :root {
-            --primary-bg: #0D1117;
-            --secondary-bg: #161B22;
-            --tertiary-bg: #21262D;
-            --accent-color: #58A6FF;
-            --accent-hover: #79C0FF;
-            --text-primary: #F0F6FC;
-            --text-secondary: #8B949E;
-            --text-muted: #6E7681;
-            --border-color: #30363D;
-            --success-color: #238636;
-            --warning-color: #F85149;
-            --surface-color: #0D1117;
-            --shadow-color: rgba(0, 0, 0, 0.6);
+            /* Modern App Color Palette */
+            --primary-bg: #000000;
+            --secondary-bg: #1C1C1E;
+            --tertiary-bg: #2C2C2E;
+            --card-bg: #1C1C1E;
+
+            /* Vibrant Accent Colors */
+            --accent-primary: #0A84FF;
+            --accent-secondary: #5E5CE6;
+            --accent-success: #32D74B;
+            --accent-warning: #FF9F0A;
+            --accent-danger: #FF453A;
+
+            /* Gradients */
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-accent: linear-gradient(135deg, #0A84FF 0%, #5E5CE6 100%);
+            --gradient-dark: linear-gradient(180deg, #1C1C1E 0%, #000000 100%);
+
+            /* Text Colors */
+            --text-primary: #FFFFFF;
+            --text-secondary: #EBEBF5;
+            --text-tertiary: #98989D;
+            --text-muted: #636366;
+
+            /* Border & Divider */
+            --border-light: rgba(255, 255, 255, 0.1);
+            --border-medium: rgba(255, 255, 255, 0.15);
+            --border-strong: rgba(255, 255, 255, 0.2);
+
+            /* Shadows */
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
+
+            /* Glass Effect */
+            --glass-bg: rgba(28, 28, 30, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.1);
         }
 
         * {
@@ -33,67 +67,104 @@
 
         html, body {
             height: 100vh;
+            height: 100dvh; /* Dynamic viewport height for mobile */
             width: 100vw;
             overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
             background: var(--primary-bg);
             color: var(--text-primary);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
         }
 
-        /* CSS Grid Layout */
+        /* CSS Grid Layout - Fixed Full Screen */
         .app-grid {
             height: 100vh;
+            height: 100dvh;
             width: 100vw;
             display: grid;
-            grid-template-areas: 
+            grid-template-areas:
                 "header"
                 "terminal"
                 "actions";
-            grid-template-rows: 56px 1fr 64px;
+            grid-template-rows: 60px 1fr 68px;
             transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
         }
 
         .app-grid.controls-active {
-            grid-template-areas: 
+            grid-template-areas:
                 "header"
                 "terminal"
                 "controls"
                 "actions";
-            grid-template-rows: 56px 1fr auto 64px;
+            grid-template-rows: 60px 1fr auto 68px;
         }
 
-        /* Header Area */
+        /* Header Area - Modern Glass Effect */
         .header-area {
             grid-area: header;
-            background: var(--secondary-bg);
-            border-bottom: 1px solid var(--border-color);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--border-light);
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 0 24px;
-            box-shadow: 0 1px 3px var(--shadow-color);
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            z-index: 100;
         }
 
         .logo {
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 17px;
+            font-weight: 700;
             color: var(--text-primary);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            letter-spacing: -0.3px;
         }
 
         .logo-icon {
-            width: 20px;
-            height: 20px;
-            background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
-            border-radius: 4px;
+            width: 32px;
+            height: 32px;
+            background: var(--gradient-accent);
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
-            color: var(--primary-bg);
-            box-shadow: 0 2px 4px rgba(88, 166, 255, 0.3);
+            font-size: 16px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(10, 132, 255, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo-icon::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0%, 100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            50% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
 
         .header-controls {
@@ -103,41 +174,61 @@
 
         .header-btn {
             background: var(--tertiary-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: var(--text-primary);
-            padding: 8px 12px;
-            font-size: 12px;
-            font-weight: 500;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gradient-accent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
         }
 
         .header-btn:hover {
-            background: var(--accent-color);
-            border-color: var(--accent-color);
-            color: var(--primary-bg);
-            box-shadow: 0 2px 8px rgba(88, 166, 255, 0.3);
-            transform: translateY(-1px);
+            border-color: var(--accent-primary);
+            color: white;
+            box-shadow: 0 4px 16px rgba(10, 132, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .header-btn:hover::before {
+            opacity: 1;
         }
 
         .header-btn:active {
-            transform: scale(0.98);
+            transform: translateY(0) scale(0.96);
+            box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3);
         }
 
-        /* Terminal Area */
+        /* Terminal Area - Premium Design */
         .terminal-area {
             grid-area: terminal;
-            background: var(--surface-color);
+            background: var(--primary-bg);
             position: relative;
             overflow: hidden;
-            margin: 8px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+            margin: 12px;
+            border-radius: 20px;
+            border: 1px solid var(--border-medium);
+            box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
 
         .terminal-container {
@@ -146,31 +237,105 @@
             left: 0;
             right: 0;
             bottom: 0;
-            padding: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Terminal Header - Status Bar */
+        .terminal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(28, 28, 30, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 12px 12px 0 0;
+            border-bottom: 1px solid var(--border-light);
+            margin: -16px -16px 12px -16px;
+        }
+
+        .terminal-status {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent-success);
+            box-shadow: 0 0 12px var(--accent-success);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .terminal-info {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-weight: 500;
         }
 
         .terminal-screen {
             width: 100%;
             height: 100%;
-            background: var(--primary-bg);
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
+            background: linear-gradient(135deg, #0a0a0a 0%, #000000 100%);
+            border-radius: 12px;
             overflow: hidden;
             position: relative;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
         }
 
-        /* Controls Area */
+        /* Terminal glow effect */
+        .terminal-screen::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+            opacity: 0.3;
+        }
+
+        /* Controls Area - Modern Bottom Sheet */
         .controls-area {
             grid-area: controls;
-            background: var(--secondary-bg);
-            border-top: 1px solid var(--border-color);
+            background: var(--gradient-dark);
+            border-top: 1px solid var(--border-medium);
             display: none;
             flex-direction: column;
-            box-shadow: 0 -2px 8px var(--shadow-color);
+            box-shadow: var(--shadow-xl);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
         }
 
         .controls-active .controls-area {
             display: flex;
+            animation: slideUpFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideUpFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Ambient glow for controls */
+        .controls-area::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: radial-gradient(ellipse at bottom, rgba(10, 132, 255, 0.15) 0%, transparent 70%);
+            pointer-events: none;
         }
 
         /* Controls Header */
@@ -205,14 +370,13 @@
         }
 
         .minimize-btn {
-            background: var(--warning-color);
-            border: none;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            color: white;
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            color: var(--text-tertiary);
             cursor: pointer;
-            font-size: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -220,12 +384,19 @@
         }
 
         .minimize-btn:hover {
-            background: #F85149;
-            transform: scale(1.1);
+            background: var(--accent-danger);
+            border-color: var(--accent-danger);
+            color: white;
+            transform: scale(1.05);
         }
 
         .minimize-btn:active {
             transform: scale(0.95);
+        }
+
+        .minimize-btn i {
+            width: 18px;
+            height: 18px;
         }
 
         /* Controls Content */
@@ -283,97 +454,564 @@
             gap: 8px;
         }
 
-        /* Control Key Styles */
-        .ctrl-key {
-            background: var(--tertiary-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: var(--text-primary);
-            padding: 8px;
+        /* Quick Keys Section */
+        .quick-keys-toggle {
+            background: var(--gradient-accent);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 6px 12px;
             font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3);
+        }
+
+        .quick-keys-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(10, 132, 255, 0.5);
+        }
+
+        .quick-keys-toggle:active {
+            transform: translateY(0);
+        }
+
+        .quick-keys-dropdown {
+            margin-top: 12px;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 12px;
+            max-height: 240px;
+            overflow-y: auto;
+            animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .quick-keys-category {
+            margin-bottom: 16px;
+        }
+
+        .quick-keys-category:last-child {
+            margin-bottom: 0;
+        }
+
+        .category-title {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            padding-left: 4px;
+        }
+
+        .quick-keys-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .quick-key-item {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: var(--text-primary);
+            font-size: 13px;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .quick-key-item:hover {
+            background: var(--secondary-bg);
+            border-color: var(--accent-primary);
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(10, 132, 255, 0.2);
+        }
+
+        .quick-key-item:active {
+            transform: translateX(2px) scale(0.98);
+        }
+
+        .quick-key-item i {
+            width: 16px;
+            height: 16px;
+            color: var(--accent-primary);
+            flex-shrink: 0;
+        }
+
+        .add-custom-key-btn {
+            background: var(--accent-primary);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            width: 24px;
+            height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 36px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .add-custom-key-btn:hover {
+            background: var(--accent-secondary);
+            transform: scale(1.1);
+        }
+
+        .add-custom-key-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Custom Key Modal */
+        .custom-key-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            position: relative;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close-btn:hover {
+            background: var(--tertiary-bg);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .modal-body .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .modal-body label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-body input[type="text"],
+        .modal-body select {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .modal-body input[type="text"]:focus,
+        .modal-body select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.1);
+        }
+
+        .key-combo-builder {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modifier-keys {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
             user-select: none;
         }
 
+        .checkbox-label:hover {
+            background: var(--secondary-bg);
+            border-color: var(--accent-primary);
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--accent-primary);
+        }
+
+        .checkbox-label span {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .key-preview {
+            background: var(--primary-bg);
+            border: 2px dashed var(--border-light);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-family: 'JetBrains Mono', monospace;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 44px;
+        }
+
+        .modal-btn-secondary {
+            background: var(--tertiary-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-light);
+        }
+
+        .modal-btn-secondary:hover {
+            background: var(--secondary-bg);
+            transform: translateY(-2px);
+        }
+
+        .modal-btn-primary {
+            background: var(--gradient-accent);
+            color: white;
+            box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
+        }
+
+        .modal-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(10, 132, 255, 0.5);
+        }
+
+        .modal-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        /* Control Key Styles - iOS/Android Keyboard Inspired */
+        .ctrl-key {
+            background: linear-gradient(180deg, var(--tertiary-bg) 0%, var(--secondary-bg) 100%);
+            border: 1px solid var(--border-light);
+            border-bottom: 2px solid var(--border-medium);
+            border-radius: 10px;
+            color: var(--text-primary);
+            padding: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            min-height: 44px;
+            user-select: none;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .ctrl-key::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 10px;
+            background: var(--gradient-accent);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
         .ctrl-key:hover {
-            background: var(--accent-color);
-            border-color: var(--accent-color);
-            color: var(--primary-bg);
-            transform: translateY(-1px);
+            border-color: var(--accent-primary);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 20px rgba(10, 132, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .ctrl-key:hover::before {
+            opacity: 0.15;
         }
 
         .ctrl-key:active {
-            transform: scale(0.95);
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+            transform: translateY(0) scale(0.96);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
+            border-bottom-width: 1px;
+        }
+
+        .ctrl-key span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .ctrl-key i {
+            position: relative;
+            z-index: 1;
         }
 
         .ctrl-key.arrow {
-            font-size: 16px;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .ctrl-key.arrow i {
+            width: 22px;
+            height: 22px;
+            stroke-width: 2.5;
+        }
+
+        /* Keys with icon + text */
+        .ctrl-key:has(i):has(span) {
+            gap: 6px;
+        }
+
+        .ctrl-key:has(i):has(span) i {
+            margin-bottom: -2px;
+        }
+
+        .ctrl-key:has(i):has(span) span {
+            font-size: 10px;
             font-weight: 600;
+            opacity: 0.9;
         }
 
         .ctrl-key.special {
-            background: var(--warning-color);
-            border-color: var(--warning-color);
+            background: linear-gradient(180deg, var(--accent-danger) 0%, #cc0000 100%);
+            border-color: var(--accent-danger);
             color: white;
+            box-shadow: 0 2px 12px rgba(255, 69, 58, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
         .ctrl-key.special:hover {
-            background: #F85149;
-            border-color: #F85149;
+            background: linear-gradient(180deg, #ff5f52 0%, var(--accent-danger) 100%);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 24px rgba(255, 69, 58, 0.6);
         }
 
-        /* Actions Area */
+        .ctrl-key.special:active {
+            background: linear-gradient(180deg, #cc0000 0%, #990000 100%);
+        }
+
+        /* Actions Area - Modern Tab Bar */
         .actions-area {
             grid-area: actions;
-            background: var(--secondary-bg);
-            border-top: 1px solid var(--border-color);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-top: 1px solid var(--border-light);
             display: flex;
             justify-content: space-around;
             align-items: center;
-            padding: 0 20px;
+            padding: 0 16px;
+            box-shadow: var(--shadow-md);
+            position: relative;
+            z-index: 90;
+        }
+
+        /* Active indicator track */
+        .actions-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 20%;
+            height: 3px;
+            background: var(--gradient-accent);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 0 0 3px 3px;
         }
 
         .action-btn {
             background: transparent;
             border: none;
-            color: var(--text-secondary);
+            color: var(--text-tertiary);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
             cursor: pointer;
-            padding: 8px 12px;
-            border-radius: 8px;
-            transition: all 0.2s ease;
-            font-size: 11px;
-            font-weight: 500;
+            padding: 10px 16px;
+            border-radius: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 12px;
+            font-weight: 600;
+            position: relative;
+            flex: 1;
         }
 
-        .action-btn:hover,
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--gradient-accent);
+            opacity: 0;
+            border-radius: 14px;
+            transition: opacity 0.3s ease;
+        }
+
+        .action-btn:hover::before {
+            opacity: 0.1;
+        }
+
+        .action-btn:hover {
+            color: var(--accent-primary);
+            transform: translateY(-3px) scale(1.05);
+        }
+
         .action-btn.active {
-            background: var(--tertiary-bg);
-            color: var(--accent-color);
-            transform: translateY(-1px);
+            color: var(--accent-primary);
+        }
+
+        .action-btn.active .action-icon {
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
         }
 
         .action-btn:active {
-            transform: scale(0.95);
+            transform: scale(0.92);
         }
 
         .action-icon {
-            width: 20px;
-            height: 20px;
+            width: 26px;
+            height: 26px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 20px;
+            position: relative;
+            z-index: 1;
+            transition: transform 0.3s ease;
+        }
+
+        .action-btn:hover .action-icon {
+            transform: scale(1.15);
+        }
+
+        .action-btn span:last-child {
+            position: relative;
+            z-index: 1;
         }
 
         /* Icons */
@@ -383,76 +1021,132 @@
             justify-content: center;
         }
 
-        /* Welcome Screen */
+        /* Welcome Screen - Elegant & Inviting */
         .welcome {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
-            opacity: 0.8;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -40%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
         }
 
         .welcome-icon {
-            width: 64px;
-            height: 64px;
-            background: var(--accent-color);
-            border-radius: 12px;
+            width: 96px;
+            height: 96px;
+            background: var(--gradient-accent);
+            border-radius: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 28px;
-            color: var(--primary-bg);
-            margin: 0 auto 20px;
-            animation: pulse 2s infinite;
+            font-size: 48px;
+            color: white;
+            margin: 0 auto 24px;
+            box-shadow: 0 12px 40px rgba(10, 132, 255, 0.4);
+            animation: floatPulse 3s ease-in-out infinite;
+            position: relative;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.05); }
+        .welcome-icon::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            background: var(--gradient-accent);
+            border-radius: 26px;
+            opacity: 0.3;
+            filter: blur(12px);
+            z-index: -1;
+            animation: glowPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes floatPulse {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+            }
+            50% {
+                transform: translateY(-8px) scale(1.05);
+            }
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
         }
 
         .welcome-text {
-            font-size: 20px;
-            color: var(--text-primary);
-            margin-bottom: 8px;
-            font-weight: 600;
+            font-size: 28px;
+            font-weight: 700;
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
         }
 
         .welcome-sub {
-            font-size: 14px;
-            color: var(--text-secondary);
+            font-size: 16px;
+            color: var(--text-tertiary);
+            font-weight: 500;
         }
 
-        /* Toast */
+        /* Toast - Modern Notification */
         .toast {
             position: fixed;
             top: 80px;
             right: 20px;
-            background: var(--accent-color);
-            color: var(--primary-bg);
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 500;
-            box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
-            animation: slideIn 0.3s ease-out;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            color: var(--text-primary);
+            padding: 16px 20px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: var(--shadow-lg), 0 0 0 1px var(--border-light);
+            animation: toastSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 1000;
-            border: 1px solid var(--accent-hover);
+            border: 1px solid var(--border-medium);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 200px;
         }
 
-        @keyframes slideIn {
+        .toast::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--accent-success);
+            border-radius: 50%;
+            flex-shrink: 0;
+            box-shadow: 0 0 12px var(--accent-success);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes toastSlideIn {
             from {
-                transform: translateX(100%);
+                transform: translateX(400px) scale(0.8);
                 opacity: 0;
             }
             to {
-                transform: translateX(0);
+                transform: translateX(0) scale(1);
                 opacity: 1;
             }
         }
 
-        /* Loading */
+        /* Loading - Premium Experience */
         .loading {
             position: fixed;
             top: 0;
@@ -464,51 +1158,281 @@
             align-items: center;
             justify-content: center;
             z-index: 9999;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .loading.fade-out {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
         }
 
         .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border-color);
-            border-top: 3px solid var(--accent-color);
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid var(--accent-primary);
+            border-right: 4px solid var(--accent-secondary);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
+            animation: spinGradient 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            box-shadow: 0 0 40px rgba(10, 132, 255, 0.3);
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @keyframes spinGradient {
+            0% {
+                transform: rotate(0deg) scale(1);
+                box-shadow: 0 0 40px rgba(10, 132, 255, 0.3);
+            }
+            50% {
+                transform: rotate(180deg) scale(1.1);
+                box-shadow: 0 0 60px rgba(94, 92, 230, 0.5);
+            }
+            100% {
+                transform: rotate(360deg) scale(1);
+                box-shadow: 0 0 40px rgba(10, 132, 255, 0.3);
+            }
         }
 
         /* Mobile Responsive */
         @media (max-width: 768px) {
+            /* Better touch targets for mobile */
             .header-area {
-                padding: 0 16px;
+                padding: 0 12px;
+                height: 60px;
             }
 
+            .logo {
+                font-size: 14px;
+            }
+
+            .logo-icon {
+                width: 28px;
+                height: 28px;
+                font-size: 14px;
+            }
+
+            .header-controls {
+                gap: 6px;
+            }
+
+            /* Larger touch targets - minimum 44x44px for iOS HIG */
+            .header-btn {
+                min-width: 44px;
+                min-height: 44px;
+                padding: 0;
+                justify-content: center;
+                border-radius: 8px;
+            }
+
+            /* Hide button text on mobile, show only icons */
+            .header-btn .btn-text {
+                display: none;
+            }
+
+            .header-btn i {
+                width: 18px;
+                height: 18px;
+            }
+
+            /* Terminal area optimizations */
+            .terminal-area {
+                margin: 8px 6px;
+                border-radius: 16px;
+            }
+
+            .terminal-container {
+                padding: 10px;
+            }
+
+            .terminal-screen {
+                border-radius: 10px;
+            }
+
+            /* Controls content */
             .controls-content {
                 grid-template-columns: 1fr;
-                gap: 16px;
-                padding: 16px;
+                gap: 20px;
+                padding: 20px 16px;
+                max-height: 280px;
             }
-            
+
             .keys-grid {
                 grid-template-columns: repeat(3, 1fr);
-            }
-            
-            .header-btn {
-                padding: 6px 10px;
-                font-size: 11px;
+                gap: 10px;
             }
 
+            /* Larger arrow keys for better touch */
             .arrows-grid {
-                grid-template-columns: 36px 36px 36px;
-                grid-template-rows: 36px 36px;
+                grid-template-columns: 50px 50px 50px;
+                grid-template-rows: 50px 50px;
+                gap: 8px;
             }
 
+            /* Larger control keys - minimum 48x48px for Android */
             .ctrl-key {
-                min-height: 32px;
+                min-height: 48px;
+                min-width: 48px;
+                font-size: 13px;
+                padding: 10px;
+                border-radius: 8px;
+            }
+
+            .ctrl-key.arrow {
+                font-size: 20px;
+            }
+
+            /* Actions bar optimizations */
+            .actions-area {
+                padding: 0 8px;
+                height: 70px;
+            }
+
+            .action-btn {
+                min-width: 60px;
+                min-height: 60px;
+                padding: 8px 4px;
                 font-size: 10px;
+            }
+
+            .action-icon {
+                width: 24px;
+                height: 24px;
+                font-size: 20px;
+            }
+
+            /* Welcome screen */
+            .welcome-icon {
+                width: 80px;
+                height: 80px;
+                font-size: 36px;
+            }
+
+            .welcome-text {
+                font-size: 18px;
+            }
+
+            /* Toast notifications */
+            .toast {
+                right: 10px;
+                top: 70px;
+                font-size: 13px;
+                padding: 10px 14px;
+            }
+
+            /* Better section titles */
+            .section-title {
+                font-size: 12px;
+                margin-bottom: 10px;
+            }
+
+            /* Controls header */
+            .controls-header {
+                padding: 14px 16px;
+            }
+
+            .controls-title {
+                font-size: 15px;
+            }
+
+            /* Bottom sheet style for controls */
+            .controls-area {
+                border-radius: 20px 20px 0 0;
+                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+                background: linear-gradient(to bottom, var(--tertiary-bg), var(--secondary-bg));
+            }
+
+            .controls-header {
+                border-radius: 20px 20px 0 0;
+                position: relative;
+            }
+
+            /* Add drag handle indicator */
+            .controls-header::before {
+                content: '';
+                position: absolute;
+                top: 8px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 40px;
+                height: 4px;
+                background: var(--text-muted);
+                border-radius: 2px;
+                opacity: 0.5;
+            }
+
+            /* Keyboard-like appearance */
+            .ctrl-key {
+                background: linear-gradient(to bottom, var(--tertiary-bg), var(--secondary-bg));
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            }
+
+            .ctrl-key:active {
+                box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+                transform: scale(0.96);
+            }
+        }
+
+        /* Extra small devices (phones in portrait) */
+        @media (max-width: 480px) {
+            .app-grid {
+                grid-template-rows: 56px 1fr 72px;
+            }
+
+            .app-grid.controls-active {
+                grid-template-rows: 56px 1fr auto 72px;
+            }
+
+            .header-area {
+                padding: 0 10px;
+                height: 56px;
+            }
+
+            .logo {
+                font-size: 13px;
+            }
+
+            .logo-icon {
+                width: 24px;
+                height: 24px;
+                font-size: 12px;
+            }
+
+            .header-btn {
+                min-width: 40px;
+                min-height: 40px;
+            }
+
+            .header-btn .icon {
+                font-size: 16px;
+            }
+
+            .actions-area {
+                height: 65px;
+                padding: 0 4px;
+            }
+
+            .action-btn {
+                min-width: 50px;
+                min-height: 55px;
+                font-size: 9px;
+                gap: 2px;
+            }
+
+            .action-icon {
+                width: 20px;
+                height: 20px;
+                font-size: 18px;
+            }
+        }
+
+        /* Safe area support for notched devices */
+        @supports (padding: env(safe-area-inset-top)) {
+            .header-area {
+                padding-top: env(safe-area-inset-top);
+            }
+
+            .actions-area {
+                padding-bottom: env(safe-area-inset-bottom);
             }
         }
 
@@ -547,36 +1471,45 @@
         <!-- Header Area -->
         <div class="header-area">
             <div class="logo">
-                <div class="logo-icon">⚡</div>
+                <div class="logo-icon">
+                    <i data-lucide="terminal" style="width: 18px; height: 18px;"></i>
+                </div>
                 Terminal Grid
             </div>
             <div class="header-controls">
                 <button class="header-btn" onclick="createTerminal()">
-                    <span class="icon">+</span>
-                    New Terminal
+                    <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+                    <span class="btn-text">New</span>
                 </button>
-                <!-- Connect button disabled for now
-                <button class="header-btn" onclick="showExistingSessions()">
-                    <span class="icon">📡</span>
-                    Connect
-                </button>
-                -->
                 <button class="header-btn" onclick="showStats()">
-                    <span class="icon">ⓘ</span>
-                    Stats
+                    <i data-lucide="info" style="width: 16px; height: 16px;"></i>
+                    <span class="btn-text">Info</span>
                 </button>
             </div>
         </div>
 
-        <!-- Terminal Area - האזור שמתכווץ אוטומטית -->
+        <!-- Terminal Area - Premium Terminal Experience -->
         <div class="terminal-area" id="terminalArea">
             <div class="terminal-container">
+                <!-- Terminal Status Bar -->
+                <div class="terminal-header" id="terminalHeader" style="display: none;">
+                    <div class="terminal-status">
+                        <div class="status-dot"></div>
+                        <span class="terminal-info">Connected</span>
+                    </div>
+                    <div class="terminal-status">
+                        <span class="terminal-info" id="terminalSize">--x--</span>
+                    </div>
+                </div>
+
                 <div class="terminal-screen" id="terminalScreen">
                     <!-- Welcome Screen -->
                     <div class="welcome" id="welcome">
-                        <div class="welcome-icon">▶</div>
+                        <div class="welcome-icon">
+                            <i data-lucide="terminal" style="width: 48px; height: 48px; stroke-width: 2;"></i>
+                        </div>
                         <div class="welcome-text">Terminal Grid</div>
-                        <div class="welcome-sub">Click "New Terminal" to start</div>
+                        <div class="welcome-sub">Tap "New" to start a session</div>
                     </div>
                 </div>
             </div>
@@ -587,11 +1520,13 @@
             <!-- Controls Header -->
             <div class="controls-header">
                 <div class="controls-title">
-                    <div class="controls-icon">⌨</div>
+                    <div class="controls-icon">
+                        <i data-lucide="keyboard" style="width: 14px; height: 14px;"></i>
+                    </div>
                     Terminal Controls
                 </div>
                 <button class="minimize-btn" onclick="hideControls()" title="Close Controls">
-                    ×
+                    <i data-lucide="chevron-down" style="width: 16px; height: 16px;"></i>
                 </button>
             </div>
 
@@ -601,10 +1536,18 @@
                 <div class="arrows-section">
                     <div class="section-title">Navigation</div>
                     <div class="arrows-grid">
-                        <button class="ctrl-key arrow arrow-up" onclick="sendKey('ArrowUp')">↑</button>
-                        <button class="ctrl-key arrow arrow-left" onclick="sendKey('ArrowLeft')">←</button>
-                        <button class="ctrl-key arrow arrow-down" onclick="sendKey('ArrowDown')">↓</button>
-                        <button class="ctrl-key arrow arrow-right" onclick="sendKey('ArrowRight')">→</button>
+                        <button class="ctrl-key arrow arrow-up" onclick="sendKey('ArrowUp')">
+                            <i data-lucide="arrow-up" style="width: 20px; height: 20px;"></i>
+                        </button>
+                        <button class="ctrl-key arrow arrow-left" onclick="sendKey('ArrowLeft')">
+                            <i data-lucide="arrow-left" style="width: 20px; height: 20px;"></i>
+                        </button>
+                        <button class="ctrl-key arrow arrow-down" onclick="sendKey('ArrowDown')">
+                            <i data-lucide="arrow-down" style="width: 20px; height: 20px;"></i>
+                        </button>
+                        <button class="ctrl-key arrow arrow-right" onclick="sendKey('ArrowRight')">
+                            <i data-lucide="arrow-right" style="width: 20px; height: 20px;"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -612,22 +1555,204 @@
                 <div class="keys-section">
                     <div class="section-title">Control Keys</div>
                     <div class="keys-grid">
-                        <button class="ctrl-key" onclick="sendKey('Tab')">Tab</button>
-                        <button class="ctrl-key" onclick="sendKey('Escape')">Esc</button>
-                        <button class="ctrl-key" onclick="sendKey('Enter')">Enter</button>
-                        <button class="ctrl-key" onclick="sendKey('Backspace')">⌫</button>
-                        <button class="ctrl-key special" onclick="sendCtrlKey('c')">Ctrl+C</button>
-                        <button class="ctrl-key special" onclick="sendCtrlKey('d')">Ctrl+D</button>
+                        <button class="ctrl-key" onclick="sendKey('Tab')">
+                            <span>Tab</span>
+                        </button>
+                        <button class="ctrl-key" onclick="sendKey('Escape')">
+                            <span>Esc</span>
+                        </button>
+                        <button class="ctrl-key" onclick="sendKey('Enter')">
+                            <i data-lucide="corner-down-left" style="width: 16px; height: 16px;"></i>
+                        </button>
+                        <button class="ctrl-key" onclick="sendKey('Backspace')">
+                            <i data-lucide="delete" style="width: 16px; height: 16px;"></i>
+                        </button>
+                        <button class="ctrl-key special" onclick="sendCtrlKey('c')">
+                            <span>^C</span>
+                        </button>
+                        <button class="ctrl-key special" onclick="sendCtrlKey('d')">
+                            <span>^D</span>
+                        </button>
                     </div>
                     
                     <div style="margin-top: 12px;">
                         <div class="section-title">Text Actions</div>
                         <div class="keys-grid">
-                            <button class="ctrl-key" onclick="copySelection()">Copy</button>
-                            <button class="ctrl-key" onclick="pasteText()">Paste</button>
-                            <button class="ctrl-key" onclick="sendKey(' ')" style="grid-column: span 2;">Space</button>
+                            <button class="ctrl-key" onclick="copySelection()">
+                                <i data-lucide="copy" style="width: 14px; height: 14px;"></i>
+                                <span style="font-size: 11px;">Copy</span>
+                            </button>
+                            <button class="ctrl-key" onclick="pasteText()">
+                                <i data-lucide="clipboard" style="width: 14px; height: 14px;"></i>
+                                <span style="font-size: 11px;">Paste</span>
+                            </button>
+                            <button class="ctrl-key" onclick="sendKey(' ')" style="grid-column: span 2;">
+                                <span>Space</span>
+                            </button>
                         </div>
                     </div>
+
+                    <!-- Quick Keys Section -->
+                    <div style="margin-top: 16px;">
+                        <div class="section-title" style="display: flex; align-items: center; justify-content: space-between;">
+                            <span>Quick Keys</span>
+                            <button class="quick-keys-toggle" onclick="toggleQuickKeys()" id="quickKeysToggle">
+                                <i data-lucide="zap" style="width: 14px; height: 14px;"></i>
+                                <span>Custom</span>
+                            </button>
+                        </div>
+
+                        <!-- Quick Keys Dropdown -->
+                        <div class="quick-keys-dropdown" id="quickKeysDropdown" style="display: none;">
+                            <div class="quick-keys-category">
+                                <div class="category-title">Development</div>
+                                <div class="quick-keys-list">
+                                    <button class="quick-key-item" onclick="sendQuickKey('npm run dev')">
+                                        <i data-lucide="play" style="width: 14px; height: 14px;"></i>
+                                        <span>npm run dev</span>
+                                    </button>
+                                    <button class="quick-key-item" onclick="sendQuickKey('npm install')">
+                                        <i data-lucide="package" style="width: 14px; height: 14px;"></i>
+                                        <span>npm install</span>
+                                    </button>
+                                    <button class="quick-key-item" onclick="sendQuickKey('npm test')">
+                                        <i data-lucide="check-circle" style="width: 14px; height: 14px;"></i>
+                                        <span>npm test</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="quick-keys-category">
+                                <div class="category-title">Git Commands</div>
+                                <div class="quick-keys-list">
+                                    <button class="quick-key-item" onclick="sendQuickKey('git status')">
+                                        <i data-lucide="git-branch" style="width: 14px; height: 14px;"></i>
+                                        <span>git status</span>
+                                    </button>
+                                    <button class="quick-key-item" onclick="sendQuickKey('git add .')">
+                                        <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+                                        <span>git add .</span>
+                                    </button>
+                                    <button class="quick-key-item" onclick="sendQuickKey('git commit -m &quot;&quot;', -1)">
+                                        <i data-lucide="git-commit" style="width: 14px; height: 14px;"></i>
+                                        <span>git commit</span>
+                                    </button>
+                                    <button class="quick-key-item" onclick="sendQuickKey('git push')">
+                                        <i data-lucide="upload" style="width: 14px; height: 14px;"></i>
+                                        <span>git push</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="quick-keys-category">
+                                <div class="category-title">System</div>
+                                <div class="quick-keys-list">
+                                    <button class="quick-key-item" onclick="sendQuickKey('ls -la')">
+                                        <i data-lucide="list" style="width: 14px; height: 14px;"></i>
+                                        <span>ls -la</span>
+                                    </button>
+                                    <button class="quick-key-item" onclick="sendQuickKey('pwd')">
+                                        <i data-lucide="folder" style="width: 14px; height: 14px;"></i>
+                                        <span>pwd</span>
+                                    </button>
+                                    <button class="quick-key-item" onclick="sendQuickKey('clear')">
+                                        <i data-lucide="eraser" style="width: 14px; height: 14px;"></i>
+                                        <span>clear</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="quick-keys-category">
+                                <div class="category-title">Docker</div>
+                                <div class="quick-keys-list">
+                                    <button class="quick-key-item" onclick="sendQuickKey('docker ps')">
+                                        <i data-lucide="box" style="width: 14px; height: 14px;"></i>
+                                        <span>docker ps</span>
+                                    </button>
+                                    <button class="quick-key-item" onclick="sendQuickKey('docker-compose up')">
+                                        <i data-lucide="layers" style="width: 14px; height: 14px;"></i>
+                                        <span>docker-compose up</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="quick-keys-category">
+                                <div class="category-title" style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>Custom Keys</span>
+                                    <button class="add-custom-key-btn" onclick="openCustomKeyModal()">
+                                        <i data-lucide="plus" style="width: 12px; height: 12px;"></i>
+                                    </button>
+                                </div>
+                                <div class="quick-keys-list" id="customKeysList">
+                                    <!-- Custom keys will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Key Modal -->
+        <div class="custom-key-modal" id="customKeyModal" style="display: none;">
+            <div class="modal-backdrop" onclick="closeCustomKeyModal()"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Add Custom Key</h3>
+                    <button class="modal-close-btn" onclick="closeCustomKeyModal()">
+                        <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Label</label>
+                        <input type="text" id="customKeyLabel" placeholder="e.g., My Command" />
+                    </div>
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select id="customKeyType" onchange="updateCustomKeyForm()">
+                            <option value="command">Command</option>
+                            <option value="keycombo">Key Combination</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="commandInputGroup">
+                        <label>Command</label>
+                        <input type="text" id="customKeyCommand" placeholder="e.g., npm run dev" />
+                    </div>
+                    <div class="form-group" id="keyComboGroup" style="display: none;">
+                        <label>Key Combination</label>
+                        <div class="key-combo-builder">
+                            <div class="modifier-keys">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="ctrlKey" />
+                                    <span>Ctrl</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="shiftKey" />
+                                    <span>Shift</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="altKey" />
+                                    <span>Alt</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="metaKey" />
+                                    <span>Meta</span>
+                                </label>
+                            </div>
+                            <input type="text" id="mainKey" placeholder="e.g., j, Tab, Enter" maxlength="15" />
+                            <div class="key-preview" id="keyPreview">Press keys...</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Icon (optional)</label>
+                        <input type="text" id="customKeyIcon" placeholder="e.g., terminal, code, zap" />
+                        <small style="color: var(--text-tertiary); font-size: 10px;">Lucide icon name</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="modal-btn modal-btn-secondary" onclick="closeCustomKeyModal()">Cancel</button>
+                    <button class="modal-btn modal-btn-primary" onclick="saveCustomKey()">Save</button>
                 </div>
             </div>
         </div>
@@ -635,23 +1760,33 @@
         <!-- Actions Area -->
         <div class="actions-area">
             <button class="action-btn" onclick="focusTerminal()">
-                <span class="action-icon">⌨</span>
+                <span class="action-icon">
+                    <i data-lucide="keyboard" style="width: 22px; height: 22px;"></i>
+                </span>
                 <span>Keyboard</span>
             </button>
             <button class="action-btn" onclick="toggleControls()" id="controlsBtn">
-                <span class="action-icon">⚙</span>
+                <span class="action-icon">
+                    <i data-lucide="sliders-horizontal" style="width: 22px; height: 22px;"></i>
+                </span>
                 <span>Controls</span>
             </button>
             <button class="action-btn" onclick="clearTerminal()">
-                <span class="action-icon">⌫</span>
+                <span class="action-icon">
+                    <i data-lucide="eraser" style="width: 22px; height: 22px;"></i>
+                </span>
                 <span>Clear</span>
             </button>
             <button class="action-btn" onclick="shareTerminal()">
-                <span class="action-icon">↗</span>
+                <span class="action-icon">
+                    <i data-lucide="share-2" style="width: 22px; height: 22px;"></i>
+                </span>
                 <span>Share</span>
             </button>
-            <button class="action-btn" onclick="openMonitor()" style="background: var(--accent-color); color: var(--primary-bg);">
-                <span class="action-icon">▦</span>
+            <button class="action-btn" onclick="openMonitor()">
+                <span class="action-icon">
+                    <i data-lucide="layout-grid" style="width: 22px; height: 22px;"></i>
+                </span>
                 <span>Monitor</span>
             </button>
         </div>
@@ -670,6 +1805,7 @@
         let shareId = null;
         let controlsVisible = false;
         let config = {};
+        let customKeys = [];
 
         // Mobile detection
         const isMobile = window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -715,8 +1851,9 @@
         // Setup application
         function setupApp() {
             setupEventListeners();
+            loadCustomKeys();
             console.log('Terminal Grid ready');
-            
+
             // Check if we should connect to an existing session
             const existingSession = checkUrlParams();
             if (existingSession) {
@@ -732,21 +1869,52 @@
                 return;
             }
 
-            // Hide welcome
+            // Hide welcome and show terminal header
             document.getElementById('welcome').style.display = 'none';
+            const terminalHeader = document.getElementById('terminalHeader');
+            if (terminalHeader) {
+                terminalHeader.style.display = 'flex';
+            }
 
-            // Create xterm
+            // Create xterm with mobile-optimized settings
             terminal = new Terminal({
                 cursorBlink: true,
-                fontSize: isMobile ? 12 : 14,
-                fontFamily: '"Cascadia Code", "Courier New", monospace',
+                fontSize: isMobile ? 15 : 16,
+                fontFamily: '"JetBrains Mono", "Fira Code", "SF Mono", "Consolas", "Monaco", "Menlo", monospace',
+                fontWeight: '400',
+                fontWeightBold: '700',
+                letterSpacing: 0,
                 theme: {
-                    background: '#000814',
-                    foreground: '#e0e0e0',
-                    cursor: '#00ff88'
+                    background: '#000000',
+                    foreground: '#E4E4E7',
+                    cursor: '#0A84FF',
+                    cursorAccent: '#000000',
+                    selectionBackground: 'rgba(10, 132, 255, 0.3)',
+                    selectionForeground: '#FFFFFF',
+                    black: '#27272A',
+                    red: '#FF6B6B',
+                    green: '#51CF66',
+                    yellow: '#FFC078',
+                    blue: '#4DABF7',
+                    magenta: '#CC5DE8',
+                    cyan: '#5AC8FA',
+                    white: '#E4E4E7',
+                    brightBlack: '#71717A',
+                    brightRed: '#FF8787',
+                    brightGreen: '#8CE99A',
+                    brightYellow: '#FFD43B',
+                    brightBlue: '#74C0FC',
+                    brightMagenta: '#E599F7',
+                    brightCyan: '#99E9F2',
+                    brightWhite: '#FAFAFA'
                 },
-                scrollback: 5000,
-                convertEol: true
+                scrollback: 10000,
+                convertEol: true,
+                lineHeight: isMobile ? 1.3 : 1.2,
+                cursorStyle: 'block',
+                cursorWidth: 2,
+                bellStyle: 'none',
+                allowTransparency: true
             });
 
             // Add fit addon
@@ -844,7 +2012,20 @@
                         rows: rows
                     });
                 }
+                // Update terminal size in header
+                const sizeElement = document.getElementById('terminalSize');
+                if (sizeElement) {
+                    sizeElement.textContent = `${cols}×${rows}`;
+                }
             });
+
+            // Set initial size
+            setTimeout(() => {
+                const sizeElement = document.getElementById('terminalSize');
+                if (sizeElement && terminal) {
+                    sizeElement.textContent = `${terminal.cols}×${terminal.rows}`;
+                }
+            }, 100);
 
             showToast('Terminal Ready');
         }
@@ -874,19 +2055,21 @@
         function showControls() {
             const appGrid = document.getElementById('appGrid');
             const controlsBtn = document.getElementById('controlsBtn');
-            
-            // הקסם! רק משנים CSS class
+
             appGrid.classList.add('controls-active');
             controlsBtn.classList.add('active');
             controlsVisible = true;
-            
-            // CSS Grid אוטומטית מתכווץ את הטרמינל!
+
+            // Refresh icons after showing controls
             setTimeout(() => {
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
                 if (terminal && terminal.fitAddon) {
                     terminal.fitAddon.fit();
                 }
             }, 300);
-            
+
             showToast('Controls Activated');
         }
 
@@ -955,6 +2138,367 @@
                 });
             }
         }
+
+        // Toggle Quick Keys dropdown
+        function toggleQuickKeys() {
+            const dropdown = document.getElementById('quickKeysDropdown');
+            const isVisible = dropdown.style.display !== 'none';
+
+            if (isVisible) {
+                dropdown.style.display = 'none';
+            } else {
+                dropdown.style.display = 'block';
+                // Refresh icons when dropdown opens
+                setTimeout(() => {
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                }, 50);
+            }
+        }
+
+        // Send quick key command
+        function sendQuickKey(command, cursorOffset = 0) {
+            if (!terminal || !socket || !sessionId) {
+                showToast('Terminal not connected');
+                return;
+            }
+
+            // Send the command
+            socket.emit('terminal:input', {
+                sessionId: sessionId,
+                data: command + '\r'
+            });
+
+            // If cursorOffset is specified, move cursor back
+            if (cursorOffset < 0) {
+                for (let i = 0; i < Math.abs(cursorOffset); i++) {
+                    socket.emit('terminal:input', {
+                        sessionId: sessionId,
+                        data: '\x1b[D' // Left arrow
+                    });
+                }
+            }
+
+            // Close dropdown
+            const dropdown = document.getElementById('quickKeysDropdown');
+            dropdown.style.display = 'none';
+
+            showToast(`Running: ${command}`);
+        }
+
+        // Send custom key combination
+        function sendCustomKey(keyData) {
+            if (!terminal || !socket || !sessionId) {
+                showToast('Terminal not connected');
+                return;
+            }
+
+            if (keyData.type === 'command') {
+                sendQuickKey(keyData.command, keyData.cursorOffset);
+            } else if (keyData.type === 'keycombo') {
+                const data = encodeKeyCombo(keyData.ctrl, keyData.shift, keyData.alt, keyData.meta, keyData.key);
+                if (data) {
+                    socket.emit('terminal:input', {
+                        sessionId: sessionId,
+                        data: data
+                    });
+                    showToast(`Sent: ${formatKeyCombo(keyData)}`);
+                }
+            }
+
+            // Close dropdown
+            const dropdown = document.getElementById('quickKeysDropdown');
+            dropdown.style.display = 'none';
+        }
+
+        // Encode key combination to terminal escape sequence
+        function encodeKeyCombo(ctrl, shift, alt, meta, key) {
+            const keyLower = key.toLowerCase();
+
+            // Special keys mapping
+            const specialKeys = {
+                'tab': '\t',
+                'enter': '\r',
+                'escape': '\x1b',
+                'backspace': '\x7f',
+                'space': ' ',
+                'arrowup': '\x1b[A',
+                'arrowdown': '\x1b[B',
+                'arrowright': '\x1b[C',
+                'arrowleft': '\x1b[D',
+                'home': '\x1b[H',
+                'end': '\x1b[F',
+                'pageup': '\x1b[5~',
+                'pagedown': '\x1b[6~',
+                'delete': '\x1b[3~',
+                'insert': '\x1b[2~'
+            };
+
+            // Ctrl combinations
+            if (ctrl && !shift && !alt && !meta) {
+                if (keyLower === 'c') return '\x03';
+                if (keyLower === 'd') return '\x04';
+                if (keyLower === 'z') return '\x1a';
+                if (keyLower === 'a') return '\x01';
+                if (keyLower === 'e') return '\x05';
+                if (keyLower === 'k') return '\x0b';
+                if (keyLower === 'l') return '\x0c';
+                if (keyLower === 'u') return '\x15';
+                if (keyLower === 'w') return '\x17';
+
+                // Generic Ctrl+letter
+                const code = keyLower.charCodeAt(0);
+                if (code >= 97 && code <= 122) { // a-z
+                    return String.fromCharCode(code - 96);
+                }
+            }
+
+            // Shift+Tab
+            if (shift && keyLower === 'tab' && !ctrl && !alt && !meta) {
+                return '\x1b[Z';
+            }
+
+            // Alt combinations (ESC prefix)
+            if (alt && !ctrl && !meta) {
+                if (specialKeys[keyLower]) {
+                    return '\x1b' + specialKeys[keyLower];
+                }
+                return '\x1b' + key;
+            }
+
+            // No modifiers - check special keys
+            if (!ctrl && !shift && !alt && !meta) {
+                if (specialKeys[keyLower]) {
+                    return specialKeys[keyLower];
+                }
+                return key;
+            }
+
+            return null;
+        }
+
+        // Format key combination for display
+        function formatKeyCombo(keyData) {
+            const parts = [];
+            if (keyData.ctrl) parts.push('Ctrl');
+            if (keyData.shift) parts.push('Shift');
+            if (keyData.alt) parts.push('Alt');
+            if (keyData.meta) parts.push('Meta');
+            parts.push(keyData.key);
+            return parts.join('+');
+        }
+
+        // Load custom keys from localStorage
+        function loadCustomKeys() {
+            try {
+                const saved = localStorage.getItem('terminalCustomKeys');
+                if (saved) {
+                    customKeys = JSON.parse(saved);
+                    renderCustomKeys();
+                }
+            } catch (error) {
+                console.error('Failed to load custom keys:', error);
+            }
+        }
+
+        // Save custom keys to localStorage
+        function saveCustomKeysToStorage() {
+            try {
+                localStorage.setItem('terminalCustomKeys', JSON.stringify(customKeys));
+            } catch (error) {
+                console.error('Failed to save custom keys:', error);
+            }
+        }
+
+        // Render custom keys list
+        function renderCustomKeys() {
+            const list = document.getElementById('customKeysList');
+            if (!list) return;
+
+            if (customKeys.length === 0) {
+                list.innerHTML = '<div style="color: var(--text-tertiary); font-size: 12px; text-align: center; padding: 12px;">No custom keys yet</div>';
+                return;
+            }
+
+            list.innerHTML = customKeys.map((key, index) => {
+                const iconName = key.icon || (key.type === 'command' ? 'terminal' : 'command');
+                const displayText = key.type === 'command' ? key.command : formatKeyCombo(key);
+
+                return `
+                    <div class="quick-key-item" style="position: relative; padding-right: 40px;">
+                        <button style="all: unset; display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer;"
+                                onclick="sendCustomKey(customKeys[${index}])">
+                            <i data-lucide="${iconName}" style="width: 14px; height: 14px;"></i>
+                            <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px;">
+                                <span style="font-size: 12px; font-weight: 600;">${key.label}</span>
+                                <span style="font-size: 10px; color: var(--text-tertiary);">${displayText}</span>
+                            </div>
+                        </button>
+                        <button onclick="deleteCustomKey(${index})"
+                                style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+                                       background: transparent; border: none; color: var(--text-tertiary);
+                                       cursor: pointer; padding: 4px; display: flex; align-items: center;
+                                       border-radius: 6px; transition: all 0.2s ease;"
+                                onmouseover="this.style.background='var(--tertiary-bg)'; this.style.color='var(--accent-danger)';"
+                                onmouseout="this.style.background='transparent'; this.style.color='var(--text-tertiary)';">
+                            <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+            // Refresh Lucide icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        // Delete custom key
+        function deleteCustomKey(index) {
+            if (confirm('Delete this custom key?')) {
+                customKeys.splice(index, 1);
+                saveCustomKeysToStorage();
+                renderCustomKeys();
+                showToast('Custom key deleted');
+            }
+        }
+
+        // Open custom key modal
+        function openCustomKeyModal() {
+            const modal = document.getElementById('customKeyModal');
+            modal.style.display = 'flex';
+
+            // Reset form
+            document.getElementById('customKeyLabel').value = '';
+            document.getElementById('customKeyType').value = 'command';
+            document.getElementById('customKeyCommand').value = '';
+            document.getElementById('customKeyIcon').value = '';
+            document.getElementById('ctrlKey').checked = false;
+            document.getElementById('shiftKey').checked = false;
+            document.getElementById('altKey').checked = false;
+            document.getElementById('metaKey').checked = false;
+            document.getElementById('mainKey').value = '';
+            updateCustomKeyForm();
+
+            // Refresh icons
+            setTimeout(() => {
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }, 50);
+        }
+
+        // Close custom key modal
+        function closeCustomKeyModal() {
+            document.getElementById('customKeyModal').style.display = 'none';
+        }
+
+        // Update custom key form based on type
+        function updateCustomKeyForm() {
+            const type = document.getElementById('customKeyType').value;
+            const commandGroup = document.getElementById('commandInputGroup');
+            const keyComboGroup = document.getElementById('keyComboGroup');
+
+            if (type === 'command') {
+                commandGroup.style.display = 'flex';
+                keyComboGroup.style.display = 'none';
+            } else {
+                commandGroup.style.display = 'none';
+                keyComboGroup.style.display = 'flex';
+            }
+        }
+
+        // Update key preview
+        function updateKeyPreview() {
+            const preview = document.getElementById('keyPreview');
+            const ctrl = document.getElementById('ctrlKey').checked;
+            const shift = document.getElementById('shiftKey').checked;
+            const alt = document.getElementById('altKey').checked;
+            const meta = document.getElementById('metaKey').checked;
+            const mainKey = document.getElementById('mainKey').value;
+
+            if (!mainKey && !ctrl && !shift && !alt && !meta) {
+                preview.textContent = 'Press keys...';
+                return;
+            }
+
+            const parts = [];
+            if (ctrl) parts.push('Ctrl');
+            if (shift) parts.push('Shift');
+            if (alt) parts.push('Alt');
+            if (meta) parts.push('Meta');
+            if (mainKey) parts.push(mainKey);
+
+            preview.textContent = parts.join(' + ') || 'Press keys...';
+        }
+
+        // Save custom key
+        function saveCustomKey() {
+            const label = document.getElementById('customKeyLabel').value.trim();
+            const type = document.getElementById('customKeyType').value;
+            const icon = document.getElementById('customKeyIcon').value.trim();
+
+            if (!label) {
+                showToast('Please enter a label');
+                return;
+            }
+
+            const keyData = {
+                label,
+                type,
+                icon: icon || null
+            };
+
+            if (type === 'command') {
+                const command = document.getElementById('customKeyCommand').value.trim();
+                if (!command) {
+                    showToast('Please enter a command');
+                    return;
+                }
+                keyData.command = command;
+                keyData.cursorOffset = 0;
+            } else {
+                const ctrl = document.getElementById('ctrlKey').checked;
+                const shift = document.getElementById('shiftKey').checked;
+                const alt = document.getElementById('altKey').checked;
+                const meta = document.getElementById('metaKey').checked;
+                const mainKey = document.getElementById('mainKey').value.trim();
+
+                if (!mainKey) {
+                    showToast('Please enter a key');
+                    return;
+                }
+
+                keyData.ctrl = ctrl;
+                keyData.shift = shift;
+                keyData.alt = alt;
+                keyData.meta = meta;
+                keyData.key = mainKey;
+            }
+
+            customKeys.push(keyData);
+            saveCustomKeysToStorage();
+            renderCustomKeys();
+            closeCustomKeyModal();
+            showToast('Custom key saved!');
+        }
+
+        // Add event listeners for key preview
+        document.addEventListener('DOMContentLoaded', () => {
+            const mainKeyInput = document.getElementById('mainKey');
+            const checkboxes = ['ctrlKey', 'shiftKey', 'altKey', 'metaKey'];
+
+            if (mainKeyInput) {
+                mainKeyInput.addEventListener('input', updateKeyPreview);
+                checkboxes.forEach(id => {
+                    const checkbox = document.getElementById(id);
+                    if (checkbox) {
+                        checkbox.addEventListener('change', updateKeyPreview);
+                    }
+                });
+            }
+        });
 
         // Copy selection
         function copySelection() {
@@ -1124,18 +2668,45 @@
 
             // Create terminal if not already created
             if (!terminal) {
-                // Create xterm
+                // Create xterm with mobile-optimized settings
                 terminal = new Terminal({
                     cursorBlink: true,
-                    fontSize: isMobile ? 12 : 14,
-                    fontFamily: '"Cascadia Code", "Courier New", monospace',
+                    fontSize: isMobile ? 15 : 16,
+                    fontFamily: '"JetBrains Mono", "Fira Code", "SF Mono", "Consolas", "Monaco", "Menlo", monospace',
+                    fontWeight: '400',
+                    fontWeightBold: '700',
+                    letterSpacing: 0,
                     theme: {
-                        background: '#000814',
-                        foreground: '#e0e0e0',
-                        cursor: '#00ff88'
+                        background: '#000000',
+                        foreground: '#E4E4E7',
+                        cursor: '#0A84FF',
+                        cursorAccent: '#000000',
+                        selectionBackground: 'rgba(10, 132, 255, 0.3)',
+                        selectionForeground: '#FFFFFF',
+                        black: '#27272A',
+                        red: '#FF6B6B',
+                        green: '#51CF66',
+                        yellow: '#FFC078',
+                        blue: '#4DABF7',
+                        magenta: '#CC5DE8',
+                        cyan: '#5AC8FA',
+                        white: '#E4E4E7',
+                        brightBlack: '#71717A',
+                        brightRed: '#FF8787',
+                        brightGreen: '#8CE99A',
+                        brightYellow: '#FFD43B',
+                        brightBlue: '#74C0FC',
+                        brightMagenta: '#E599F7',
+                        brightCyan: '#99E9F2',
+                        brightWhite: '#FAFAFA'
                     },
-                    scrollback: 5000,
-                    convertEol: true
+                    scrollback: 10000,
+                    convertEol: true,
+                    lineHeight: isMobile ? 1.3 : 1.2,
+                    cursorStyle: 'block',
+                    cursorWidth: 2,
+                    bellStyle: 'none',
+                    allowTransparency: true
                 });
 
                 // Add fit addon
@@ -1205,18 +2776,45 @@
 
             // Create terminal if not already created
             if (!terminal) {
-                // Create xterm
+                // Create xterm with mobile-optimized settings
                 terminal = new Terminal({
                     cursorBlink: true,
-                    fontSize: isMobile ? 12 : 14,
-                    fontFamily: '"Cascadia Code", "Courier New", monospace',
+                    fontSize: isMobile ? 15 : 16,
+                    fontFamily: '"JetBrains Mono", "Fira Code", "SF Mono", "Consolas", "Monaco", "Menlo", monospace',
+                    fontWeight: '400',
+                    fontWeightBold: '700',
+                    letterSpacing: 0,
                     theme: {
-                        background: '#000814',
-                        foreground: '#e0e0e0',
-                        cursor: '#00ff88'
+                        background: '#000000',
+                        foreground: '#E4E4E7',
+                        cursor: '#0A84FF',
+                        cursorAccent: '#000000',
+                        selectionBackground: 'rgba(10, 132, 255, 0.3)',
+                        selectionForeground: '#FFFFFF',
+                        black: '#27272A',
+                        red: '#FF6B6B',
+                        green: '#51CF66',
+                        yellow: '#FFC078',
+                        blue: '#4DABF7',
+                        magenta: '#CC5DE8',
+                        cyan: '#5AC8FA',
+                        white: '#E4E4E7',
+                        brightBlack: '#71717A',
+                        brightRed: '#FF8787',
+                        brightGreen: '#8CE99A',
+                        brightYellow: '#FFD43B',
+                        brightBlue: '#74C0FC',
+                        brightMagenta: '#E599F7',
+                        brightCyan: '#99E9F2',
+                        brightWhite: '#FAFAFA'
                     },
-                    scrollback: 5000,
-                    convertEol: true
+                    scrollback: 10000,
+                    convertEol: true,
+                    lineHeight: isMobile ? 1.3 : 1.2,
+                    cursorStyle: 'block',
+                    cursorWidth: 2,
+                    bellStyle: 'none',
+                    allowTransparency: true
                 });
 
                 // Add fit addon
@@ -1283,11 +2881,11 @@
         function connectToExistingSession(session) {
             // Hide welcome
             document.getElementById('welcome').style.display = 'none';
-            
-            // Create xterm
+
+            // Create xterm with mobile-optimized settings
             terminal = new Terminal({
                 cursorBlink: true,
-                fontSize: isMobile ? 12 : 14,
+                fontSize: isMobile ? 14 : 14,
                 fontFamily: '"Cascadia Code", "Courier New", monospace',
                 theme: {
                     background: '#000814',
@@ -1295,7 +2893,8 @@
                     cursor: '#00ff88'
                 },
                 scrollback: 5000,
-                convertEol: true
+                convertEol: true,
+                lineHeight: isMobile ? 1.2 : 1.0
             });
 
             // Add fit addon
@@ -1489,7 +3088,13 @@
         }
 
         // Initialize
-        window.addEventListener('DOMContentLoaded', loadConfig);
+        window.addEventListener('DOMContentLoaded', () => {
+            // Initialize Lucide icons
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+            loadConfig();
+        });
     </script>
 </body>
 </html>
