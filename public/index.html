@@ -2645,12 +2645,8 @@
 
         // Show existing sessions dialog
         async function showExistingSessions() {
-            try {
-                // Fetch TTYs and tmux sessions
-                const [ttyResponse, tmuxResponse] = await Promise.all([
-                    fetch('/api/system/ttys'),
-                    fetch('/api/tmux/sessions')
-                ]);
+            showToast('Connect feature temporarily disabled');
+        }
 
                 const ttyData = await ttyResponse.json();
                 const tmuxData = await tmuxResponse.json();
