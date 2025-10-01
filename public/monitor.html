@@ -252,9 +252,9 @@
             background: var(--tertiary-bg);
             border: 1px solid var(--border-color);
             border-radius: 6px;
-            padding: 12px;
+            padding: 16px;
             display: grid;
-            grid-template-columns: auto 1fr auto;
+            grid-template-columns: auto auto 1fr auto;
             gap: 16px;
             align-items: center;
             transition: all 0.2s ease;
@@ -263,6 +263,54 @@
         .session-card:hover {
             border-color: var(--accent-color);
             transform: translateX(4px);
+        }
+
+        /* Selected card style */
+        .session-card:has(.session-checkbox:checked) {
+            background: rgba(88, 166, 255, 0.1);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 1px rgba(88, 166, 255, 0.3);
+        }
+
+        /* Custom checkbox styling */
+        .session-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            background: var(--secondary-bg);
+        }
+
+        .session-checkbox:hover {
+            border-color: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        .session-checkbox:checked {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 8px rgba(88, 166, 255, 0.5);
+        }
+
+        .session-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .session-checkbox:active {
+            transform: scale(0.95);
         }
 
         .session-status {
@@ -593,8 +641,12 @@
             </div>
             <div style="display: flex; gap: 10px;">
                 <button class="refresh-btn" onclick="window.location.href='/'">
-                    <i data-lucide="home" style="width: 16px; height: 16px;"></i>
-                    <span>Home</span>
+                    <i data-lucide="terminal" style="width: 16px; height: 16px;"></i>
+                    <span>Terminal</span>
+                </button>
+                <button class="refresh-btn" onclick="window.location.href='/ports'">
+                    <i data-lucide="server" style="width: 16px; height: 16px;"></i>
+                    <span>Ports</span>
                 </button>
                 <button class="refresh-btn" onclick="window.open('/', '_blank')">
                     <i data-lucide="plus-circle" style="width: 16px; height: 16px;"></i>
@@ -651,10 +703,22 @@
 
         <!-- Active Sessions -->
         <div class="sessions-section">
-            <h2 class="section-title">
-                <span>▢</span>
-                <span>Active Terminal Sessions</span>
-            </h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2 class="section-title" style="margin: 0;">
+                    <span>▢</span>
+                    <span>Active Terminal Sessions</span>
+                </h2>
+                <div style="display: flex; gap: 8px;">
+                    <button class="refresh-btn" onclick="selectAllActive()" id="selectAllActiveBtn">
+                        <i data-lucide="check-square" style="width: 14px; height: 14px;"></i>
+                        <span>Select All</span>
+                    </button>
+                    <button class="refresh-btn" onclick="deleteSelected('active')" id="deleteActiveBtn" style="display: none; background: var(--warning-color);">
+                        <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                        <span>Delete Selected</span>
+                    </button>
+                </div>
+            </div>
             <div id="sessionsContainer">
                 <div class="loading">
                     <div class="spinner"></div>
@@ -665,10 +729,22 @@
 
         <!-- Saved Sessions -->
         <div class="sessions-section" style="margin-top: 20px;">
-            <h2 class="section-title">
-                <span>◉</span>
-                <span>Saved Sessions</span>
-            </h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2 class="section-title" style="margin: 0;">
+                    <span>◉</span>
+                    <span>Saved Sessions</span>
+                </h2>
+                <div style="display: flex; gap: 8px;">
+                    <button class="refresh-btn" onclick="selectAllSaved()" id="selectAllSavedBtn">
+                        <i data-lucide="check-square" style="width: 14px; height: 14px;"></i>
+                        <span>Select All</span>
+                    </button>
+                    <button class="refresh-btn" onclick="deleteSelected('saved')" id="deleteSavedBtn" style="display: none; background: var(--warning-color);">
+                        <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                        <span>Delete Selected</span>
+                    </button>
+                </div>
+            </div>
             <div id="savedSessionsContainer">
                 <div class="loading">
                     <div class="spinner"></div>
@@ -683,6 +759,10 @@
         const API_BASE = window.location.origin;
         let refreshInterval = null;
         let totalBytes = 0;
+
+        // Store selected sessions to preserve across refreshes
+        let selectedActive = new Set();
+        let selectedSaved = new Set();
 
         // Fetch all data
         async function fetchData() {
@@ -761,8 +841,11 @@
                 return;
             }
             
-            const sessionsHTML = sessions.map(session => `
+            const sessionsHTML = sessions.map(session => {
+                const isChecked = selectedActive.has(session.id) ? 'checked' : '';
+                return `
                 <div class="session-card">
+                    <input type="checkbox" class="session-checkbox active-checkbox" data-session-id="${session.id}" onchange="toggleSelection('active', '${session.id}')" ${isChecked}>
                     <div class="session-status active"></div>
                     <div class="session-info">
                         <div class="session-name">Session ${session.id.substring(0, 8)}...</div>
@@ -792,9 +875,11 @@
                         </button>
                     </div>
                 </div>
-            `).join('');
-            
+            `;
+            }).join('');
+
             container.innerHTML = `<div class="sessions-grid">${sessionsHTML}</div>`;
+            updateDeleteButtons();
         }
 
         // Update saved sessions list
@@ -815,8 +900,11 @@
                 return;
             }
             
-            const sessionsHTML = sessions.map(session => `
+            const sessionsHTML = sessions.map(session => {
+                const isChecked = selectedSaved.has(session.shareId) ? 'checked' : '';
+                return `
                 <div class="session-card">
+                    <input type="checkbox" class="session-checkbox saved-checkbox" data-share-id="${session.shareId}" onchange="toggleSelection('saved', '${session.shareId}')" ${isChecked}>
                     <div class="session-status ${session.isActive ? 'active' : 'inactive'}"></div>
                     <div class="session-info">
                         <div class="session-name">${session.name}</div>
@@ -850,10 +938,12 @@
                         </button>
                     </div>
                 </div>
-            `).join('');
-            
+            `;
+            }).join('');
+
             container.innerHTML = `<div class="sessions-grid">${sessionsHTML}</div>`;
             if (typeof lucide !== 'undefined') lucide.createIcons();
+            updateDeleteButtons();
         }
 
         // Show error message
@@ -941,24 +1031,28 @@
             });
         }
 
-        async function closeSession(sessionId) {
-            if (!confirm('Are you sure you want to close this session?')) return;
-            
+        async function closeSession(sessionId, skipConfirm = false) {
+            if (!skipConfirm && !confirm('Are you sure you want to close this session?')) return;
+
             // Would need API endpoint to close specific session
-            alert('Close session functionality would be implemented here');
+            if (!skipConfirm) {
+                alert('Close session functionality would be implemented here');
+            }
             fetchData();
         }
 
-        async function deleteSession(shareId) {
-            if (!confirm('Are you sure you want to delete this saved session?')) return;
-            
+        async function deleteSession(shareId, skipConfirm = false) {
+            if (!skipConfirm && !confirm('Are you sure you want to delete this saved session?')) return;
+
             try {
                 const response = await fetch(`${API_BASE}/api/session/${shareId}`, {
                     method: 'DELETE'
                 });
-                
+
                 if (response.ok) {
-                    alert('Session deleted successfully');
+                    if (!skipConfirm) {
+                        alert('Session deleted successfully');
+                    }
                     fetchData();
                 } else {
                     alert('Failed to delete session');
@@ -995,6 +1089,129 @@
         window.addEventListener('beforeunload', () => {
             stopAutoRefresh();
         });
+
+        // Toggle selection of a single session
+        function toggleSelection(type, id) {
+            if (type === 'active') {
+                if (selectedActive.has(id)) {
+                    selectedActive.delete(id);
+                } else {
+                    selectedActive.add(id);
+                }
+            } else {
+                if (selectedSaved.has(id)) {
+                    selectedSaved.delete(id);
+                } else {
+                    selectedSaved.add(id);
+                }
+            }
+            updateDeleteButtons();
+        }
+
+        // Select/Deselect all active sessions
+        function selectAllActive() {
+            const checkboxes = document.querySelectorAll('.active-checkbox');
+            const allChecked = selectedActive.size > 0 && selectedActive.size === checkboxes.length;
+
+            if (allChecked) {
+                selectedActive.clear();
+            } else {
+                checkboxes.forEach(cb => {
+                    const id = cb.getAttribute('data-session-id');
+                    selectedActive.add(id);
+                });
+            }
+
+            // Update UI
+            checkboxes.forEach(cb => cb.checked = selectedActive.has(cb.getAttribute('data-session-id')));
+            updateDeleteButtons();
+        }
+
+        // Select/Deselect all saved sessions
+        function selectAllSaved() {
+            const checkboxes = document.querySelectorAll('.saved-checkbox');
+            const allChecked = selectedSaved.size > 0 && selectedSaved.size === checkboxes.length;
+
+            if (allChecked) {
+                selectedSaved.clear();
+            } else {
+                checkboxes.forEach(cb => {
+                    const id = cb.getAttribute('data-share-id');
+                    selectedSaved.add(id);
+                });
+            }
+
+            // Update UI
+            checkboxes.forEach(cb => cb.checked = selectedSaved.has(cb.getAttribute('data-share-id')));
+            updateDeleteButtons();
+        }
+
+        // Update delete buttons visibility
+        function updateDeleteButtons() {
+            const activeChecked = selectedActive.size;
+            const savedChecked = selectedSaved.size;
+
+            const deleteActiveBtn = document.getElementById('deleteActiveBtn');
+            const deleteSavedBtn = document.getElementById('deleteSavedBtn');
+            const selectAllActiveBtn = document.getElementById('selectAllActiveBtn');
+            const selectAllSavedBtn = document.getElementById('selectAllSavedBtn');
+
+            // Update active section
+            if (activeChecked > 0 && deleteActiveBtn) {
+                deleteActiveBtn.style.display = 'flex';
+                deleteActiveBtn.querySelector('span').textContent = `Delete ${activeChecked} Selected`;
+            } else if (deleteActiveBtn) {
+                deleteActiveBtn.style.display = 'none';
+            }
+
+            // Update saved section
+            if (savedChecked > 0 && deleteSavedBtn) {
+                deleteSavedBtn.style.display = 'flex';
+                deleteSavedBtn.querySelector('span').textContent = `Delete ${savedChecked} Selected`;
+            } else if (deleteSavedBtn) {
+                deleteSavedBtn.style.display = 'none';
+            }
+
+            // Update Select All button text
+            const allActiveChecked = activeChecked > 0 && activeChecked === document.querySelectorAll('.active-checkbox').length;
+            const allSavedChecked = savedChecked > 0 && savedChecked === document.querySelectorAll('.saved-checkbox').length;
+
+            if (selectAllActiveBtn) {
+                selectAllActiveBtn.querySelector('span').textContent = allActiveChecked ? 'Deselect All' : 'Select All';
+            }
+            if (selectAllSavedBtn) {
+                selectAllSavedBtn.querySelector('span').textContent = allSavedChecked ? 'Deselect All' : 'Select All';
+            }
+        }
+
+        // Delete selected sessions
+        async function deleteSelected(type) {
+            const selectedSet = type === 'active' ? selectedActive : selectedSaved;
+            const count = selectedSet.size;
+
+            if (count === 0) return;
+
+            const confirmed = confirm(`Are you sure you want to delete ${count} session(s)?`);
+            if (!confirmed) return;
+
+            const deletePromises = Array.from(selectedSet).map(id => {
+                if (type === 'active') {
+                    return closeSession(id, true); // Skip individual confirms
+                } else {
+                    return deleteSession(id, true); // Skip individual confirms
+                }
+            });
+
+            try {
+                await Promise.all(deletePromises);
+                selectedSet.clear(); // Clear selections after delete
+                alert(`Successfully deleted ${count} session(s)`);
+                fetchData(); // Refresh the data
+            } catch (error) {
+                console.error('Error deleting sessions:', error);
+                alert('Failed to delete some sessions. Please try again.');
+            }
+        }
     </script>
 </body>
 </html>

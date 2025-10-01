@@ -1023,22 +1023,25 @@
 
         /* Welcome Screen - Elegant & Inviting */
         .welcome {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
             text-align: center;
+            overflow-y: auto;
             animation: fadeInUp 0.8s ease-out;
         }
 
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translate(-50%, -40%);
+                transform: translateY(20px);
             }
             to {
                 opacity: 1;
-                transform: translate(-50%, -50%);
+                transform: translateY(0);
             }
         }
 
@@ -1481,9 +1484,13 @@
                     <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
                     <span class="btn-text">New</span>
                 </button>
-                <button class="header-btn" onclick="showStats()">
-                    <i data-lucide="info" style="width: 16px; height: 16px;"></i>
-                    <span class="btn-text">Info</span>
+                <button class="header-btn" onclick="showTerminalSwitcher()">
+                    <i data-lucide="list" style="width: 16px; height: 16px;"></i>
+                    <span class="btn-text">Terminals</span>
+                </button>
+                <button class="header-btn" onclick="window.open('/ports', '_blank')">
+                    <i data-lucide="server" style="width: 16px; height: 16px;"></i>
+                    <span class="btn-text">Ports</span>
                 </button>
             </div>
         </div>
@@ -1509,7 +1516,8 @@
                             <i data-lucide="terminal" style="width: 48px; height: 48px; stroke-width: 2;"></i>
                         </div>
                         <div class="welcome-text">Terminal Grid</div>
-                        <div class="welcome-sub">Tap "New" to start a session</div>
+                        <div class="welcome-sub" id="welcomeSub">Loading sessions...</div>
+                        <div id="sessionsList" style="margin-top: 20px; max-width: 500px; width: 100%;"></div>
                     </div>
                 </div>
             </div>
@@ -2036,7 +2044,8 @@
                 terminal.focus();
                 terminal.scrollToBottom();
             } else {
-                createTerminal();
+                // Don't create terminal automatically, just show message
+                showToast('No terminal active. Create one first.');
             }
         }
 
@@ -2571,13 +2580,67 @@
             });
         }
 
-        // Show stats
-        function showStats() {
-            if (terminal) {
-                showToast(`Rows: ${terminal.rows}, Cols: ${terminal.cols}`);
-            } else {
-                showToast('No active terminal');
+        // Show terminal switcher - combining all available terminals
+        async function showTerminalSwitcher() {
+            try {
+                // Fetch all sessions
+                const response = await fetch('/api/sessions');
+                const sessions = await response.json();
+
+                let html = '<div style="max-height: 500px; overflow-y: auto;">';
+
+                // Show active persistent sessions
+                if (sessions && sessions.length > 0) {
+                    html += '<h3 style="margin-top: 0; color: #0A84FF;">Active Sessions</h3>';
+                    html += '<div style="display: grid; gap: 10px; margin-bottom: 20px;">';
+
+                    sessions.forEach(session => {
+                        const isCurrentSession = sessionId && sessionId === session.sessionId;
+                        html += `<div style="padding: 12px; background: ${isCurrentSession ? '#1a3a5a' : '#2C2C2E'}; border: 1px solid ${isCurrentSession ? '#0A84FF' : '#444'}; border-radius: 8px;">`;
+                        html += `<div style="display: flex; justify-content: space-between; align-items: center;">`;
+                        html += `<div>`;
+                        html += `<div style="font-weight: 600; color: #fff;">${session.name || 'Terminal ' + session.sessionId.substring(0, 8)}</div>`;
+                        html += `<div style="font-size: 12px; color: #999;">Created: ${new Date(session.created).toLocaleString()}</div>`;
+                        html += `<div style="font-size: 11px; color: ${session.isActive ? '#32D74B' : '#999'};">${session.isActive ? '● Active' : '○ Detached'}</div>`;
+                        html += `</div>`;
+                        html += `<div style="display: flex; gap: 8px;">`;
+                        if (!isCurrentSession) {
+                            html += `<button onclick="connectToSession('${session.sessionId}')" style="padding: 6px 12px; background: #0A84FF; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px;">Connect</button>`;
+                        } else {
+                            html += `<span style="padding: 6px 12px; background: #32D74B; color: white; border-radius: 6px; font-size: 13px;">Current</span>`;
+                        }
+                        html += `</div>`;
+                        html += `</div>`;
+                        html += `</div>`;
+                    });
+
+                    html += '</div>';
+                } else {
+                    html += '<p style="color: #999; text-align: center; padding: 20px 0;">No active sessions found.</p>';
+                    html += '<p style="color: #999; text-align: center;">Click "New" to create a terminal session.</p>';
+                }
+
+                html += '</div>';
+
+                // Show in a dialog
+                const dialog = document.createElement('div');
+                dialog.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1C1C1E; padding: 24px; border: 1px solid #444; border-radius: 12px; z-index: 10000; max-width: 600px; width: 90%; color: #fff; box-shadow: 0 8px 32px rgba(0,0,0,0.5);';
+                dialog.innerHTML = '<h2 style="margin-top: 0; color: #fff;">Terminal Sessions</h2>' + html +
+                    '<button onclick="this.parentElement.remove()" style="margin-top: 16px; padding: 10px 20px; background: #444; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%;">Close</button>';
+                document.body.appendChild(dialog);
+            } catch (error) {
+                showToast('Failed to fetch sessions: ' + error.message);
             }
+        }
+
+        // Connect to existing session
+        function connectToSession(id) {
+            // Close dialog
+            const dialog = document.querySelector('div[style*="position: fixed"]');
+            if (dialog) dialog.remove();
+
+            // Reload page with session ID using the 'connect' parameter
+            window.location.href = `/?connect=${id}`;
         }
 
         // Show existing sessions dialog
@@ -2879,8 +2942,12 @@
 
         // Connect to existing session
         function connectToExistingSession(session) {
-            // Hide welcome
+            // Hide welcome and show terminal header
             document.getElementById('welcome').style.display = 'none';
+            const terminalHeader = document.getElementById('terminalHeader');
+            if (terminalHeader) {
+                terminalHeader.style.display = 'flex';
+            }
 
             // Create xterm with mobile-optimized settings
             terminal = new Terminal({
@@ -3087,6 +3154,45 @@
             });
         }
 
+        // Load sessions list on welcome screen
+        async function loadSessionsList() {
+            try {
+                const response = await fetch('/api/sessions');
+                const sessions = await response.json();
+
+                const welcomeSub = document.getElementById('welcomeSub');
+                const sessionsList = document.getElementById('sessionsList');
+
+                if (sessions && sessions.length > 0) {
+                    welcomeSub.textContent = 'Choose a session or create a new one';
+
+                    let html = '<div style="display: grid; gap: 12px; padding: 0 20px;">';
+                    sessions.forEach(session => {
+                        html += `
+                            <div style="padding: 16px; background: #2C2C2E; border: 1px solid #444; border-radius: 10px; cursor: pointer; transition: all 0.2s;"
+                                 onclick="connectToSession('${session.sessionId}')"
+                                 onmouseover="this.style.borderColor='#0A84FF'; this.style.background='#1a3a5a';"
+                                 onmouseout="this.style.borderColor='#444'; this.style.background='#2C2C2E';">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                    <div style="font-weight: 600; color: #fff;">${session.name || 'Terminal ' + session.sessionId.substring(0, 8)}</div>
+                                    <div style="font-size: 11px; color: ${session.isActive ? '#32D74B' : '#999'};">${session.isActive ? '● Active' : '○ Detached'}</div>
+                                </div>
+                                <div style="font-size: 13px; color: #999;">Created: ${new Date(session.created).toLocaleString()}</div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    sessionsList.innerHTML = html;
+                } else {
+                    welcomeSub.textContent = 'Tap "New" to start a session';
+                    sessionsList.innerHTML = '';
+                }
+            } catch (error) {
+                console.error('Failed to load sessions:', error);
+                document.getElementById('welcomeSub').textContent = 'Tap "New" to start a session';
+            }
+        }
+
         // Initialize
         window.addEventListener('DOMContentLoaded', () => {
             // Initialize Lucide icons
@@ -3094,6 +3200,10 @@
                 lucide.createIcons();
             }
             loadConfig();
+            // Load sessions list if on welcome screen
+            if (!shareId && !sessionId) {
+                loadSessionsList();
+            }
         });
     </script>
 </body>

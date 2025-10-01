@@ -505,7 +505,16 @@
                 <i data-lucide="radar" style="width: 24px; height: 24px; margin-right: 8px;"></i>
                 Port Monitor
             </h1>
-            <div class="status">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button class="btn btn-secondary" onclick="window.location.href='/'" style="display: flex; align-items: center; gap: 6px;">
+                    <i data-lucide="terminal" style="width: 14px; height: 14px;"></i>
+                    Terminal
+                </button>
+                <button class="btn btn-secondary" onclick="window.location.href='/monitor'" style="display: flex; align-items: center; gap: 6px;">
+                    <i data-lucide="activity" style="width: 14px; height: 14px;"></i>
+                    Monitor
+                </button>
+                <div class="status">
                 <div class="status-indicator">
                     <div class="status-dot active" id="statusDot"></div>
                     <span id="statusText">Monitoring Active</span>
@@ -514,6 +523,7 @@
                     <input type="checkbox" id="monitorToggle" checked>
                     <span class="slider"></span>
                 </label>
+            </div>
             </div>
         </div>
 

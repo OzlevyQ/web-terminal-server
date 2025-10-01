@@ -16,9 +16,10 @@
 - 🎮 **Mobile Support** - Touch-friendly controls for mobile devices
 - 🔒 **Security Levels** - Configurable access control (full/limited/restricted)
 - 🌐 **Ngrok Support** - Built-in support for public tunneling
-- 📊 **Session Monitor** - Real-time monitoring of all active sessions
+- 📊 **Session Monitor** - Real-time monitoring with bulk management
+- ✅ **Batch Operations** - Select and delete multiple sessions at once
 - ⚡ **Zero Delay** - Optimized for real-time performance
-- 🎨 **Professional UI** - GitHub-inspired dark theme
+- 🎨 **Professional UI** - GitHub-inspired dark theme with smooth animations
 
 ## 🚀 Quick Start
 
@@ -224,10 +225,12 @@ The shared session will:
 ## 📊 Session Monitoring
 
 Access the monitor at `http://localhost:5000/monitor` to see:
-- All active sessions
-- Session statistics
-- Resource usage
-- Quick access links
+- All active and saved sessions
+- Session statistics and resource usage
+- Quick access links to any session
+- **Bulk management** - Select multiple sessions with checkboxes
+- **Batch deletion** - Delete multiple sessions at once with a single confirmation
+- Beautiful visual feedback for selected sessions
 
 ## 🛡️ Security Best Practices
 

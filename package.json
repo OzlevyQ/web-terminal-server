@@ -1,6 +1,6 @@
 {
   "name": "web-terminal-server",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "description": "Professional web-based terminal server with persistent sessions, live sharing, port monitoring, and full CLI support",
   "main": "src/server.js",
   "bin": {
