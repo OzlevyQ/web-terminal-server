@@ -13,8 +13,6 @@ const TmuxManager = require('./TmuxManager');
 // Import orchestrator components
 const PortMonitor = require('./orchestrator/PortMonitor');
 const ProcessTracker = require('./orchestrator/ProcessTracker');
-// PerfectProxy imported above
-const CaddyIntegration = require('./orchestrator/CaddyIntegration');
 
 const app = express();
 const httpServer = createServer(app);
@@ -195,13 +193,6 @@ const tmuxManager = new TmuxManager();
 // Initialize Orchestrator components
 const portMonitor = new PortMonitor({ scanInterval: 3000 }); // Scan every 3 seconds
 const processTracker = new ProcessTracker();
-
-// Try to use Caddy first, fallback to Node.js proxy
-const caddyIntegration = new CaddyIntegration({
-  publicPort: config.server.port,
-  terminalPort: config.server.port + 1, // Terminal runs on next port
-  adminPort: 2019
-});
 
 // Start port monitoring - no proxy, just discovery
 portMonitor.on('port:discovered', async (portInfo) => {
