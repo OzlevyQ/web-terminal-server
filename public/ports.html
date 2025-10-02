@@ -119,6 +119,21 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .header h1 {
@@ -790,45 +805,48 @@
 
             .header {
                 padding: 16px;
-                flex-direction: column;
-                gap: 12px;
-                align-items: stretch;
+                gap: 16px;
             }
 
             .header h1 {
-                font-size: 20px;
-            }
-
-            .header > div:last-child {
-                flex-wrap: wrap;
+                font-size: 18px;
                 width: 100%;
             }
 
+            .header-right {
+                width: 100%;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .header-buttons {
+                width: 100%;
+                justify-content: stretch;
+            }
+
             .btn {
-                font-size: 11px;
-                padding: 8px 12px;
-                white-space: nowrap;
+                font-size: 12px;
+                padding: 10px;
                 flex: 1;
-                min-width: 80px;
+                min-width: 0;
             }
 
             .btn i {
-                width: 14px !important;
-                height: 14px !important;
+                width: 16px !important;
+                height: 16px !important;
             }
 
             .status {
                 width: 100%;
                 justify-content: space-between;
-                margin-top: 8px;
-            }
-
-            .status-indicator {
-                flex: 1;
             }
 
             .status-indicator span {
-                font-size: 12px;
+                font-size: 13px;
+            }
+
+            .toggle-switch {
+                flex-shrink: 0;
             }
 
             .main-content {
@@ -857,29 +875,31 @@
                 <i data-lucide="radar" style="width: 24px; height: 24px; margin-right: 8px;"></i>
                 Port Monitor
             </h1>
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <button class="btn btn-secondary" onclick="showHelp()" style="display: flex; align-items: center; gap: 6px;">
-                    <i data-lucide="help-circle" style="width: 14px; height: 14px;"></i>
-                    Help
-                </button>
-                <button class="btn btn-secondary" onclick="window.location.href='/'" style="display: flex; align-items: center; gap: 6px;">
-                    <i data-lucide="terminal" style="width: 14px; height: 14px;"></i>
-                    Terminal
-                </button>
-                <button class="btn btn-secondary" onclick="window.location.href='/monitor'" style="display: flex; align-items: center; gap: 6px;">
-                    <i data-lucide="activity" style="width: 14px; height: 14px;"></i>
-                    Monitor
-                </button>
-                <div class="status">
-                <div class="status-indicator">
-                    <div class="status-dot active" id="statusDot"></div>
-                    <span id="statusText">Monitoring Active</span>
+            <div class="header-right">
+                <div class="header-buttons">
+                    <button class="btn btn-secondary" onclick="showHelp()" style="display: flex; align-items: center; gap: 6px;">
+                        <i data-lucide="help-circle" style="width: 14px; height: 14px;"></i>
+                        Help
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.location.href='/'" style="display: flex; align-items: center; gap: 6px;">
+                        <i data-lucide="terminal" style="width: 14px; height: 14px;"></i>
+                        Terminal
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.location.href='/monitor'" style="display: flex; align-items: center; gap: 6px;">
+                        <i data-lucide="activity" style="width: 14px; height: 14px;"></i>
+                        Monitor
+                    </button>
                 </div>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="monitorToggle" checked>
-                    <span class="slider"></span>
-                </label>
-            </div>
+                <div class="status">
+                    <div class="status-indicator">
+                        <div class="status-dot active" id="statusDot"></div>
+                        <span id="statusText">Monitoring Active</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="monitorToggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
             </div>
         </div>
 
