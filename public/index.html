@@ -261,38 +261,62 @@
             align-items: center;
         }
 
-        .live-btn {
+        .port-btn {
             display: flex;
             align-items: center;
             gap: 6px;
             padding: 6px 12px;
-            background: rgba(255, 69, 58, 0.15);
-            border: 1px solid rgba(255, 69, 58, 0.3);
             border-radius: 8px;
-            color: var(--accent-danger);
             font-size: 12px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s ease;
             letter-spacing: 0.5px;
+            border: 1px solid;
         }
 
-        .live-btn:hover {
+        .port-btn.unpublished {
+            background: rgba(255, 69, 58, 0.15);
+            border-color: rgba(255, 69, 58, 0.3);
+            color: var(--accent-danger);
+        }
+
+        .port-btn.unpublished:hover {
             background: rgba(255, 69, 58, 0.25);
             border-color: var(--accent-danger);
             transform: translateY(-1px);
         }
 
-        .live-indicator {
-            width: 8px;
-            height: 8px;
+        .port-btn.unpublished .port-indicator {
             background: var(--accent-danger);
-            border-radius: 50%;
-            animation: livePulse 1.5s ease-in-out infinite;
             box-shadow: 0 0 8px var(--accent-danger);
         }
 
-        @keyframes livePulse {
+        .port-btn.published {
+            background: rgba(50, 215, 75, 0.15);
+            border-color: rgba(50, 215, 75, 0.3);
+            color: var(--accent-success);
+        }
+
+        .port-btn.published:hover {
+            background: rgba(50, 215, 75, 0.25);
+            border-color: var(--accent-success);
+            transform: translateY(-1px);
+        }
+
+        .port-btn.published .port-indicator {
+            background: var(--accent-success);
+            box-shadow: 0 0 8px var(--accent-success);
+        }
+
+        .port-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: portPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes portPulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.7; transform: scale(0.9); }
         }
@@ -1727,10 +1751,10 @@
                         <span class="terminal-info">Connected</span>
                     </div>
                     <div class="terminal-status">
-                        <button class="live-btn" id="liveBtn" style="display: none;" onclick="openLiveUrl()">
-                            <div class="live-indicator"></div>
-                            <span>LIVE</span>
-                            <span id="livePort"></span>
+                        <button class="port-btn unpublished" id="portBtn" style="display: none;" onclick="handlePortButtonClick()">
+                            <div class="port-indicator"></div>
+                            <span id="portBtnText">PORT</span>
+                            <span id="portBtnNumber"></span>
                         </button>
                         <span class="terminal-info" id="terminalSize">--x--</span>
                     </div>
@@ -3478,9 +3502,11 @@
         // Port monitoring for terminal session
         let terminalPid = null;
         let discoveredPorts = new Set();
+        let unpublishedPorts = new Map(); // port -> portInfo
         let activeTunnelPort = null;
         let activeTunnelUrl = null;
         let portMonitoringInterval = null;
+        let currentNotificationPort = null;
 
         // Start monitoring ports from this terminal session
         function startPortMonitoring() {
@@ -3496,13 +3522,51 @@
                     const response = await fetch(`/api/ports?sessionPid=${terminalPid}`);
                     const data = await response.json();
 
-                    if (data.success && data.ports.length > 0) {
+                    if (data.success) {
+                        const currentActivePorts = new Set(data.ports.map(p => p.port));
+
+                        // Check for new ports
                         data.ports.forEach(portInfo => {
                             if (!discoveredPorts.has(portInfo.port)) {
                                 discoveredPorts.add(portInfo.port);
+                                unpublishedPorts.set(portInfo.port, portInfo);
                                 showPortNotification(portInfo);
+                                updatePortButton();
+                                savePortState(); // Save to server
                             }
                         });
+
+                        // Check for closed ports
+                        const portsToRemove = [];
+                        unpublishedPorts.forEach((portInfo, port) => {
+                            if (!currentActivePorts.has(port)) {
+                                portsToRemove.push(port);
+                            }
+                        });
+
+                        // Remove closed unpublished ports and allow re-discovery
+                        portsToRemove.forEach(port => {
+                            unpublishedPorts.delete(port);
+                            discoveredPorts.delete(port); // IMPORTANT: Allow re-discovery!
+                            console.log(`Port ${port} closed (unpublished) - can be rediscovered`);
+                        });
+
+                        // If active tunnel port is closed, clear it
+                        let tunnelClosed = false;
+                        if (activeTunnelPort && !currentActivePorts.has(activeTunnelPort)) {
+                            console.log(`Port ${activeTunnelPort} closed (was published)`);
+                            discoveredPorts.delete(activeTunnelPort); // Allow re-discovery
+                            activeTunnelPort = null;
+                            activeTunnelUrl = null;
+                            tunnelClosed = true;
+                            showToast('🔴 Tunnel port closed');
+                        }
+
+                        // Update button and save if anything changed
+                        if (portsToRemove.length > 0 || tunnelClosed) {
+                            updatePortButton();
+                            savePortState(); // Save to server
+                        }
                     }
                 } catch (error) {
                     console.error('Port monitoring error:', error);
@@ -3573,12 +3637,16 @@
             }
         }
 
-        // Close port notification
+        // Close port notification (when clicking "Not Now")
         function closePortNotification() {
             const overlay = document.querySelector('.port-notification-overlay');
             const notification = document.querySelector('.port-notification');
             if (overlay) overlay.remove();
             if (notification) notification.remove();
+
+            // Port stays in unpublishedPorts, button stays red
+            currentNotificationPort = null;
+            updatePortButton();
         }
 
         // Create tunnel from notification
@@ -3599,16 +3667,17 @@
                     activeTunnelPort = port;
                     activeTunnelUrl = data.url;
 
-                    // Show Live button
-                    const liveBtn = document.getElementById('liveBtn');
-                    const livePort = document.getElementById('livePort');
-                    if (liveBtn && livePort) {
-                        livePort.textContent = `:${port}`;
-                        liveBtn.style.display = 'flex';
-                    }
+                    // Remove from unpublished (now it's published!)
+                    unpublishedPorts.delete(port);
+
+                    // Update port button to green
+                    updatePortButton();
+
+                    // Save state to server
+                    savePortState();
 
                     closePortNotification();
-                    showToast(`Tunnel created! ${data.url}`);
+                    showToast(`🎉 Tunnel created! ${data.url}`);
                 } else {
                     showToast('Failed to create tunnel: ' + data.error);
                     btn.classList.remove('loading');
@@ -3628,10 +3697,109 @@
             }
         }
 
-        // Open live URL
-        function openLiveUrl() {
-            if (activeTunnelUrl) {
+        // Update port button in terminal header
+        function updatePortButton() {
+            const portBtn = document.getElementById('portBtn');
+            const portBtnText = document.getElementById('portBtnText');
+            const portBtnNumber = document.getElementById('portBtnNumber');
+
+            if (!portBtn) {
+                console.warn('Port button element not found');
+                return;
+            }
+
+            console.log('Updating port button:', {
+                activeTunnelPort,
+                activeTunnelUrl,
+                unpublishedPortsCount: unpublishedPorts.size,
+                unpublishedPorts: Array.from(unpublishedPorts.keys())
+            });
+
+            // If we have an active published tunnel - show GREEN
+            if (activeTunnelPort && activeTunnelUrl) {
+                portBtn.style.display = 'flex';
+                portBtn.className = 'port-btn published';
+                portBtnText.textContent = 'LIVE';
+                portBtnNumber.textContent = `:${activeTunnelPort}`;
+                console.log(`→ Showing GREEN button: LIVE :${activeTunnelPort}`);
+            }
+            // If we have unpublished ports - show RED (first unpublished port)
+            else if (unpublishedPorts.size > 0) {
+                const firstPort = Array.from(unpublishedPorts.keys())[0];
+                portBtn.style.display = 'flex';
+                portBtn.className = 'port-btn unpublished';
+                portBtnText.textContent = 'PORT';
+                portBtnNumber.textContent = `:${firstPort}`;
+                console.log(`→ Showing RED button: PORT :${firstPort}`);
+            }
+            // No ports - hide button
+            else {
+                portBtn.style.display = 'none';
+                console.log('→ Hiding button (no ports)');
+            }
+        }
+
+        // Handle port button click
+        function handlePortButtonClick() {
+            // If published - open the tunnel URL
+            if (activeTunnelPort && activeTunnelUrl) {
                 window.open(activeTunnelUrl, '_blank');
+            }
+            // If unpublished - show notification again
+            else if (unpublishedPorts.size > 0) {
+                const firstPort = Array.from(unpublishedPorts.keys())[0];
+                const portInfo = unpublishedPorts.get(firstPort);
+                showPortNotification(portInfo);
+            }
+        }
+
+        // Save port state to server
+        async function savePortState() {
+            if (!sessionId) return;
+
+            try {
+                await fetch(`/api/session/${sessionId}/port-state`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        unpublishedPorts: Array.from(unpublishedPorts.keys()),
+                        publishedPort: activeTunnelPort,
+                        publishedUrl: activeTunnelUrl
+                    })
+                });
+            } catch (error) {
+                console.error('Failed to save port state:', error);
+            }
+        }
+
+        // Load port state from server
+        async function loadPortState() {
+            if (!sessionId) return;
+
+            try {
+                const response = await fetch(`/api/session/${sessionId}/port-state`);
+                const data = await response.json();
+
+                if (data.success) {
+                    // Restore unpublished ports
+                    data.unpublishedPorts.forEach(port => {
+                        discoveredPorts.add(port);
+                        // We don't have full portInfo, so create minimal one
+                        unpublishedPorts.set(port, { port, processName: 'unknown' });
+                    });
+
+                    // Restore published tunnel
+                    if (data.publishedPort && data.publishedUrl) {
+                        activeTunnelPort = data.publishedPort;
+                        activeTunnelUrl = data.publishedUrl;
+                        discoveredPorts.add(data.publishedPort);
+                    }
+
+                    updatePortButton();
+                    console.log('Port state restored:', data);
+                }
+            } catch (error) {
+                console.error('Failed to load port state:', error);
             }
         }
 
@@ -3640,7 +3808,9 @@
         function onTerminalCreated(data) {
             if (data.pid) {
                 terminalPid = data.pid;
-                startPortMonitoring();
+                loadPortState().then(() => {
+                    startPortMonitoring();
+                });
             }
         }
     </script>

@@ -420,6 +420,9 @@ app.post('/api/monitor/:action', (req, res) => {
 // Active tunnels storage
 const activeTunnels = new Map();
 
+// Port states per session: sessionId -> { unpublishedPorts: Set, publishedPort: number, publishedUrl: string }
+const sessionPortStates = new Map();
+
 // Create cloudflared tunnel for a port
 app.post('/api/tunnel/create', async (req, res) => {
   try {
@@ -560,6 +563,45 @@ app.get('/api/tunnels', (req, res) => {
     success: true,
     tunnels: tunnels
   });
+});
+
+// Get port state for session
+app.get('/api/session/:sessionId/port-state', (req, res) => {
+  const { sessionId } = req.params;
+  const state = sessionPortStates.get(sessionId) || {
+    unpublishedPorts: [],
+    publishedPort: null,
+    publishedUrl: null
+  };
+
+  res.json({
+    success: true,
+    unpublishedPorts: Array.from(state.unpublishedPorts || []),
+    publishedPort: state.publishedPort,
+    publishedUrl: state.publishedUrl
+  });
+});
+
+// Update port state for session
+app.post('/api/session/:sessionId/port-state', (req, res) => {
+  const { sessionId } = req.params;
+  const { unpublishedPorts, publishedPort, publishedUrl } = req.body;
+
+  const state = sessionPortStates.get(sessionId) || {};
+
+  if (unpublishedPorts !== undefined) {
+    state.unpublishedPorts = new Set(unpublishedPorts);
+  }
+  if (publishedPort !== undefined) {
+    state.publishedPort = publishedPort;
+  }
+  if (publishedUrl !== undefined) {
+    state.publishedUrl = publishedUrl;
+  }
+
+  sessionPortStates.set(sessionId, state);
+
+  res.json({ success: true });
 });
 
 // Initialize Socket.io with optimizations
