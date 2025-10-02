@@ -784,6 +784,37 @@
         }
 
         @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+
+            .header {
+                padding: 16px;
+                flex-direction: column;
+                gap: 12px;
+                align-items: stretch;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .header > div {
+                justify-content: space-between;
+                width: 100%;
+            }
+
+            .btn {
+                font-size: 12px;
+                padding: 10px;
+                white-space: nowrap;
+            }
+
+            .btn i {
+                width: 16px !important;
+                height: 16px !important;
+            }
+
             .main-content {
                 grid-template-columns: 1fr;
             }
@@ -791,6 +822,14 @@
             .help-content {
                 padding: 24px;
                 max-height: 95vh;
+            }
+
+            .port-card {
+                padding: 14px;
+            }
+
+            .port-number {
+                font-size: 1.3em;
             }
         }
     </style>

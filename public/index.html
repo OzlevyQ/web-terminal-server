@@ -1487,19 +1487,24 @@
             .header-btn {
                 min-width: 44px;
                 min-height: 44px;
-                padding: 0;
+                padding: 8px;
                 justify-content: center;
-                border-radius: 8px;
+                border-radius: 10px;
+                gap: 4px;
             }
 
-            /* Hide button text on mobile, show only icons */
-            .header-btn .btn-text {
-                display: none;
-            }
-
+            /* Show icons on mobile */
             .header-btn i {
-                width: 18px;
-                height: 18px;
+                width: 20px;
+                height: 20px;
+                flex-shrink: 0;
+            }
+
+            /* Keep text visible but smaller on mobile */
+            .header-btn .btn-text {
+                font-size: 11px;
+                font-weight: 700;
+                white-space: nowrap;
             }
 
             /* Terminal area optimizations */

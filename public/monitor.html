@@ -605,6 +605,23 @@
             .refresh-btn span:last-child {
                 display: none;
             }
+
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: stretch;
+            }
+
+            .header > div:last-child {
+                justify-content: space-between;
+                width: 100%;
+                flex-wrap: wrap;
+            }
+
+            .refresh-btn {
+                flex: 1;
+                min-width: 70px;
+            }
         }
 
         /* Safe area support for notched devices */

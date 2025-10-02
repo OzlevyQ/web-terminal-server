@@ -1,6 +1,6 @@
 {
   "name": "web-terminal-server",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "Professional web-based terminal server with persistent sessions, live sharing, smart port detection, Cloudflare tunnels, and full CLI support",
   "main": "src/server.js",
   "bin": {
