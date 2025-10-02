@@ -799,20 +799,36 @@
                 font-size: 20px;
             }
 
-            .header > div {
-                justify-content: space-between;
+            .header > div:last-child {
+                flex-wrap: wrap;
                 width: 100%;
             }
 
             .btn {
-                font-size: 12px;
-                padding: 10px;
+                font-size: 11px;
+                padding: 8px 12px;
                 white-space: nowrap;
+                flex: 1;
+                min-width: 80px;
             }
 
             .btn i {
-                width: 16px !important;
-                height: 16px !important;
+                width: 14px !important;
+                height: 14px !important;
+            }
+
+            .status {
+                width: 100%;
+                justify-content: space-between;
+                margin-top: 8px;
+            }
+
+            .status-indicator {
+                flex: 1;
+            }
+
+            .status-indicator span {
+                font-size: 12px;
             }
 
             .main-content {
