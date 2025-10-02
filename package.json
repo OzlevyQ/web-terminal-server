@@ -10,6 +10,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
+    "generate-icons": "node scripts/generate-pwa-icons.js",
     "test": "echo \"Tests coming soon\" && exit 0"
   },
   "keywords": [
@@ -57,6 +58,7 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "canvas": "^3.2.0",
     "nodemon": "^3.0.1"
   },
   "optionalDependencies": {

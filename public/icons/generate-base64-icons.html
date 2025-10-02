@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate PNG Icons</title>
+</head>
+<body>
+    <h2>Generating PNG Icons...</h2>
+    <canvas id="canvas"></canvas>
+    <div id="output"></div>
+    
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 180, 192, 384, 512];
+        const output = document.getElementById('output');
+        
+        sizes.forEach(size => {
+            const canvas = document.getElementById('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#0A84FF');
+            gradient.addColorStop(1, '#5E5CE6');
+            
+            // Rounded rectangle background
+            const radius = size * 0.234;
+            roundRect(ctx, 0, 0, size, size, radius);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            // Terminal prompt ">"
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = size * 0.047;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            ctx.beginPath();
+            ctx.moveTo(size * 0.273, size * 0.391);
+            ctx.lineTo(size * 0.430, size * 0.5);
+            ctx.lineTo(size * 0.273, size * 0.609);
+            ctx.stroke();
+            
+            // Cursor
+            ctx.fillStyle = '#FFFFFF';
+            ctx.globalAlpha = 0.9;
+            roundRect(ctx, size * 0.488, size * 0.477, size * 0.156, size * 0.047, size * 0.008);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            
+            // Port dots
+            ctx.fillStyle = '#32D74B';
+            ctx.beginPath();
+            ctx.arc(size * 0.781, size * 0.703, size * 0.023, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Download
+            const dataUrl = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `icon-${size}.png`;
+            link.href = dataUrl;
+            link.textContent = `Download icon-${size}.png`;
+            link.style.display = 'block';
+            link.style.margin = '10px';
+            output.appendChild(link);
+            
+            console.log(`Created ${size}x${size}`);
+        });
+        
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+        
+        output.innerHTML += '<p style="margin-top: 20px; color: green;">✓ All icons generated! Click each link to download.</p>';
+    </script>
+</body>
+</html>
