@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0A84FF">
+
+    <title>About - Terminal Grid</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --primary-bg: #000000;
+            --secondary-bg: #1C1C1E;
+            --tertiary-bg: #2C2C2E;
+            --accent-primary: #0A84FF;
+            --accent-secondary: #5E5CE6;
+            --accent-success: #32D74B;
+            --accent-warning: #FF9F0A;
+            --accent-danger: #FF453A;
+            --text-primary: #FFFFFF;
+            --text-secondary: #EBEBF5;
+            --text-tertiary: #98989D;
+            --border-light: rgba(255, 255, 255, 0.1);
+            --border-medium: rgba(255, 255, 255, 0.15);
+            --gradient-accent: linear-gradient(135deg, #0A84FF 0%, #5E5CE6 100%);
+            --glass-bg: rgba(28, 28, 30, 0.85);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Language Toggle */
+        .lang-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            padding: 8px;
+            border-radius: 12px;
+            border: 1px solid var(--border-light);
+            z-index: 1000;
+        }
+
+        .lang-btn {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: var(--text-tertiary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .lang-btn.active {
+            background: var(--gradient-accent);
+            color: white;
+        }
+
+        .lang-btn:hover:not(.active) {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Header */
+        .hero {
+            text-align: center;
+            padding: 60px 20px 40px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid var(--border-light);
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(10, 132, 255, 0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            to { transform: rotate(360deg); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .app-icon {
+            width: 120px;
+            height: 120px;
+            background: var(--gradient-accent);
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            box-shadow: 0 12px 40px rgba(10, 132, 255, 0.4);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .app-icon i {
+            width: 60px;
+            height: 60px;
+            color: white;
+        }
+
+        h1 {
+            font-size: 42px;
+            font-weight: 800;
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+
+        .tagline {
+            font-size: 18px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            max-width: 600px;
+            margin: 0 auto 24px;
+        }
+
+        .version-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            background: rgba(10, 132, 255, 0.15);
+            border: 1px solid rgba(10, 132, 255, 0.3);
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-primary);
+        }
+
+        /* Quick Links */
+        .quick-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .quick-link {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 20px;
+            text-decoration: none;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .quick-link:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(10, 132, 255, 0.3);
+        }
+
+        .quick-link-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--tertiary-bg);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .quick-link-content h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .quick-link-content p {
+            font-size: 13px;
+            color: var(--text-tertiary);
+        }
+
+        /* Feature Sections */
+        .section {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title i {
+            width: 32px;
+            height: 32px;
+            color: var(--accent-primary);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .feature-card {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-accent);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+
+        .feature-icon i {
+            width: 24px;
+            height: 24px;
+            color: white;
+        }
+
+        .feature-card h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .feature-card p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .stat-card {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Code Block */
+        .code-block {
+            background: var(--tertiary-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 14px;
+            color: var(--accent-primary);
+            overflow-x: auto;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-tertiary);
+            border-top: 1px solid var(--border-light);
+            margin-top: 60px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .footer-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s ease;
+        }
+
+        .footer-link:hover {
+            color: var(--accent-primary);
+        }
+
+        /* Language Content */
+        .lang-content {
+            display: none;
+        }
+
+        .lang-content.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+
+            .hero {
+                padding: 40px 16px 32px;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            .tagline {
+                font-size: 16px;
+            }
+
+            .section {
+                padding: 24px 20px;
+            }
+
+            .section-title {
+                font-size: 22px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .lang-toggle {
+                top: 12px;
+                right: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Language Toggle -->
+    <div class="lang-toggle">
+        <button class="lang-btn active" onclick="switchLang('en')">EN</button>
+        <button class="lang-btn" onclick="switchLang('he')">עב</button>
+    </div>
+
+    <div class="container">
+        <!-- English Content -->
+        <div class="lang-content active" id="lang-en">
+            <!-- Hero Section -->
+            <div class="hero">
+                <div class="hero-content">
+                    <div class="app-icon">
+                        <i data-lucide="terminal"></i>
+                    </div>
+                    <h1>Terminal Grid</h1>
+                    <p class="tagline">
+                        Professional web-based terminal with live sharing, smart port detection, and Cloudflare tunnels
+                    </p>
+                    <div class="version-badge">v1.6.2</div>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="quick-links">
+                <a href="/" class="quick-link">
+                    <div class="quick-link-icon">
+                        <i data-lucide="terminal" style="width: 24px; height: 24px; color: var(--accent-primary);"></i>
+                    </div>
+                    <div class="quick-link-content">
+                        <h3>Terminal</h3>
+                        <p>Open terminal</p>
+                    </div>
+                </a>
+                <a href="/ports" class="quick-link">
+                    <div class="quick-link-icon">
+                        <i data-lucide="radar" style="width: 24px; height: 24px; color: var(--accent-primary);"></i>
+                    </div>
+                    <div class="quick-link-content">
+                        <h3>Port Monitor</h3>
+                        <p>View open ports</p>
+                    </div>
+                </a>
+                <a href="/monitor" class="quick-link">
+                    <div class="quick-link-icon">
+                        <i data-lucide="activity" style="width: 24px; height: 24px; color: var(--accent-primary);"></i>
+                    </div>
+                    <div class="quick-link-content">
+                        <h3>Sessions</h3>
+                        <p>Manage sessions</p>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Main Features -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i data-lucide="zap"></i>
+                    Core Features
+                </h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i data-lucide="share-2"></i>
+                        </div>
+                        <h3>Live Sharing</h3>
+                        <p>Share terminal sessions with unique URLs. Perfect for collaboration and remote support.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i data-lucide="hard-drive"></i>
+                        </div>
+                        <h3>Persistent Sessions</h3>
+                        <p>Sessions survive disconnections and page reloads. Full history preserved.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i data-lucide="globe"></i>
+                        </div>
+                        <h3>Cloudflare Tunnels</h3>
+                        <p>One-click public URLs for local servers. Share your work instantly.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i data-lucide="bell"></i>
+                        </div>
+                        <h3>Smart Port Detection</h3>
+                        <p>Auto-detects when you start a server. Pop-up notifications with tunnel options.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i data-lucide="smartphone"></i>
+                        </div>
+                        <h3>Mobile Optimized</h3>
+                        <p>Full PWA support. Install as native app. Touch-friendly controls.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i data-lucide="shield-check"></i>
+                        </div>
+                        <h3>Security Levels</h3>
+                        <p>Configurable access control: full, limited, or restricted system access.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Installation -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i data-lucide="download"></i>
+                    Installation
+                </h2>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    Get started in seconds with npx (no installation required):
+                </p>
+                <div class="code-block">npx web-terminal-server</div>
+                <p style="color: var(--text-secondary); margin: 20px 0;">
+                    Or install globally:
+                </p>
+                <div class="code-block">npm install -g web-terminal-server<br>wts</div>
+            </div>
+
+            <!-- Stats -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i data-lucide="bar-chart"></i>
+                    System Capabilities
+                </h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">9000</div>
+                        <div class="stat-label">Monitored Ports</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">∞</div>
+                        <div class="stat-label">Sessions</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">3</div>
+                        <div class="stat-label">Main Pages</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">PWA</div>
+                        <div class="stat-label">App Mode</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tech Stack -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i data-lucide="code"></i>
+                    Technology Stack
+                </h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>Frontend</h3>
+                        <p>xterm.js, Socket.IO Client, PWA, Service Workers, Lucide Icons</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Backend</h3>
+                        <p>Node.js, Express, Socket.IO, node-pty, Cloudflare Tunnel API</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Features</h3>
+                        <p>Real-time port scanning, Process tree tracking, Smart caching</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <div class="footer-links">
+                    <a href="https://github.com/OzlevyQ/web-terminal-server" class="footer-link" target="_blank">
+                        <i data-lucide="github" style="width: 16px; height: 16px; vertical-align: middle;"></i>
+                        GitHub
+                    </a>
+                    <a href="https://www.npmjs.com/package/web-terminal-server" class="footer-link" target="_blank">
+                        <i data-lucide="package" style="width: 16px; height: 16px; vertical-align: middle;"></i>
+                        npm
+                    </a>
+                    <a href="/" class="footer-link">
+                        <i data-lucide="home" style="width: 16px; height: 16px; vertical-align: middle;"></i>
+                        Home
+                    </a>
+                </div>
+                <p>Made with ❤️ by developers, for developers</p>
+                <p style="font-size: 12px; margin-top: 8px;">MIT License • Open Source</p>
+            </div>
+        </div>
+
+        <!-- Hebrew Content -->
+        <div class="lang-content" id="lang-he" dir="rtl">
+            <!-- Hero Section -->
+            <div class="hero">
+                <div class="hero-content">
+                    <div class="app-icon">
+                        <i data-lucide="terminal"></i>
+                    </div>
+                    <h1>Terminal Grid</h1>
+                    <p class="tagline">
+                        טרמינל מקצועי מבוסס-דפדפן עם שיתוף חי, זיהוי פורטים חכם ומנהרות Cloudflare
+                    </p>
+                    <div class="version-badge">גרסה 1.6.2</div>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="quick-links">
+                <a href="/" class="quick-link">
+                    <div class="quick-link-icon">
+                        <i data-lucide="terminal" style="width: 24px; height: 24px; color: var(--accent-primary);"></i>
+                    </div>
+                    <div class="quick-link-content">
+                        <h3>טרמינל</h3>
+                        <p>פתח טרמינל</p>
+                    </div>
+                </a>
+                <a href="/ports" class="quick-link">
+                    <div class="quick-link-icon">
+                        <i data-lucide="radar" style="width: 24px; height: 24px; color: var(--accent-primary);"></i>
+                    </div>
+                    <div class="quick-link-content">
+                        <h3>מוניטור פורטים</h3>
+                        <p>צפה בפורטים פתוחים</p>
+                    </div>
+                </a>
+                <a href="/monitor" class="quick-link">
+                    <div class="quick-link-icon">
+                        <i data-lucide="activity" style="width: 24px; height: 24px; color: var(--accent-primary);"></i>
+                    </div>
+                    <div class="quick-link-content">
+                        <h3>סשנים</h3>
+                        <p>נהל סשנים</p>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Main Features -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i data-lucide="zap"></i>
+                    תכונות עיקריות
+                </h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i data-lucide="share-2"></i>
+                        </div>
+                        <h3>שיתוף חי</h3>
+                        <p>שתף סשנים של טרמינל עם קישורים ייחודיים. מושלם לשיתוף פעולה ותמיכה מרחוק.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i data-lucide="hard-drive"></i>
+                        </div>
+                        <h3>סשנים מתמידים</h3>
+                        <p>סשנים שורדים ניתוקים ורענון דפים. כל ההיסטוריה נשמרת.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i data-lucide="globe"></i>
+                        </div>
+                        <h3>מנהרות Cloudflare</h3>
+                        <p>כתובות URL ציבוריות בלחיצה אחת לשרתים מקומיים. שתף את העבודה שלך מיידית.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i data-lucide="bell"></i>
+                        </div>
+                        <h3>זיהוי פורטים חכם</h3>
+                        <p>מזהה אוטומטית כאשר מפעילים שרת. התראות קופצות עם אפשרויות מנהרה.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i data-lucide="smartphone"></i>
+                        </div>
+                        <h3>אופטימיזציה למובייל</h3>
+                        <p>תמיכה מלאה ב-PWA. התקן כאפליקציה מקורית. בקרות ידידותיות למגע.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i data-lucide="shield-check"></i>
+                        </div>
+                        <h3>רמות אבטחה</h3>
+                        <p>בקרת גישה הניתנת להגדרה: גישה מלאה, מוגבלת או מוגבלת למערכת.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Installation -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i data-lucide="download"></i>
+                    התקנה
+                </h2>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                    התחל בשניות עם npx (ללא התקנה נדרשת):
+                </p>
+                <div class="code-block">npx web-terminal-server</div>
+                <p style="color: var(--text-secondary); margin: 20px 0;">
+                    או התקן גלובלית:
+                </p>
+                <div class="code-block">npm install -g web-terminal-server<br>wts</div>
+            </div>
+
+            <!-- Stats -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i data-lucide="bar-chart"></i>
+                    יכולות המערכת
+                </h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">9000</div>
+                        <div class="stat-label">פורטים במעקב</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">∞</div>
+                        <div class="stat-label">סשנים</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">3</div>
+                        <div class="stat-label">עמודים ראשיים</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">PWA</div>
+                        <div class="stat-label">מצב אפליקציה</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tech Stack -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i data-lucide="code"></i>
+                    סטאק טכנולוגי
+                </h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>Frontend</h3>
+                        <p>xterm.js, Socket.IO Client, PWA, Service Workers, Lucide Icons</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Backend</h3>
+                        <p>Node.js, Express, Socket.IO, node-pty, Cloudflare Tunnel API</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>תכונות</h3>
+                        <p>סריקת פורטים בזמן אמת, מעקב עץ תהליכים, Caching חכם</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <div class="footer-links">
+                    <a href="https://github.com/OzlevyQ/web-terminal-server" class="footer-link" target="_blank">
+                        <i data-lucide="github" style="width: 16px; height: 16px; vertical-align: middle;"></i>
+                        GitHub
+                    </a>
+                    <a href="https://www.npmjs.com/package/web-terminal-server" class="footer-link" target="_blank">
+                        <i data-lucide="package" style="width: 16px; height: 16px; vertical-align: middle;"></i>
+                        npm
+                    </a>
+                    <a href="/" class="footer-link">
+                        <i data-lucide="home" style="width: 16px; height: 16px; vertical-align: middle;"></i>
+                        דף הבית
+                    </a>
+                </div>
+                <p>נוצר באהבה ❤️ על ידי מפתחים, למפתחים</p>
+                <p style="font-size: 12px; margin-top: 8px;">רישיון MIT • קוד פתוח</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Language switching
+        function switchLang(lang) {
+            // Update buttons
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Update content
+            document.querySelectorAll('.lang-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`lang-${lang}`).classList.add('active');
+
+            // Update direction
+            if (lang === 'he') {
+                document.documentElement.setAttribute('dir', 'rtl');
+            } else {
+                document.documentElement.setAttribute('dir', 'ltr');
+            }
+        }
+
+        // Initialize Lucide icons
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+</html>
